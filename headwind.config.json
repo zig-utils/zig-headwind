@@ -1,0 +1,11 @@
+{
+  "content": {
+    "files": [
+      "src/**/*.{html,js,jsx,ts,tsx,vue,svelte}"
+    ]
+  },
+  "theme": {
+    "extend": {}
+  },
+  "plugins": []
+}

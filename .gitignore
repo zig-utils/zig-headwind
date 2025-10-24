@@ -1,0 +1,29 @@
+# Zig build artifacts
+zig-cache/
+zig-out/
+.zig-cache/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node modules (for npm distribution)
+node_modules/
+
+# Distribution
+dist/
+build/
+
+# Test artifacts
+test-output/
+coverage/
+
+# Cache
+.cache/
