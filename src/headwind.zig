@@ -137,9 +137,10 @@ pub const Headwind = struct {
 
         // Preflight (if enabled)
         if (self.config.build.preflight) {
-            try css.append("  /* Preflight */\n");
-            try css.append("  *, ::before, ::after { box-sizing: border-box; }\n");
-            try css.append("  body { margin: 0; line-height: inherit; }\n");
+            const preflight_module = @import("generator/preflight.zig");
+            const preflight_css = try preflight_module.generatePreflight(self.allocator);
+            try css.append(preflight_css);
+            try css.append("\n");
         }
 
         try css.append("}\n\n");
@@ -172,7 +173,17 @@ pub const Headwind = struct {
 
         self.stats.css_rules_generated = generator.rules.items.len;
 
-        return try css.toOwnedSlice();
+        var result = try css.toOwnedSlice();
+
+        // Minify if enabled
+        if (self.config.build.minify) {
+            const minifier = @import("generator/css_minifier.zig");
+            const minified = try minifier.minify(self.allocator, result);
+            self.allocator.free(result);
+            result = minified;
+        }
+
+        return result;
     }
 
     /// Get statistics

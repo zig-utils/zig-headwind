@@ -54,6 +54,15 @@ pub const StringBuilder = struct {
         return self.buffer.toOwnedSlice(self.allocator);
     }
 
+    pub fn len(self: *const StringBuilder) usize {
+        return self.buffer.items.len;
+    }
+
+    pub fn pop(self: *StringBuilder) ?u8 {
+        if (self.buffer.items.len == 0) return null;
+        return self.buffer.pop();
+    }
+
     pub fn deinit(self: *StringBuilder) void {
         self.buffer.deinit(self.allocator);
     }

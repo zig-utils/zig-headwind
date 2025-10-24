@@ -444,6 +444,13 @@ pub const CSSGenerator = struct {
 
     /// Generate all CSS rules as a string
     pub fn generate(self: *CSSGenerator) ![]const u8 {
+        // Remove duplicate rules
+        try self.removeDuplicates();
+
+        // Sort rules for deterministic output
+        const ordering = @import("css_ordering.zig");
+        ordering.sortRules(self.rules.items);
+
         var result = string_utils.StringBuilder.init(self.allocator);
         errdefer result.deinit();
 
@@ -455,6 +462,63 @@ pub const CSSGenerator = struct {
         }
 
         return result.toOwnedSlice();
+    }
+
+    /// Remove duplicate CSS rules based on selector, media, and pseudo
+    fn removeDuplicates(self: *CSSGenerator) !void {
+        if (self.rules.items.len == 0) return;
+
+        var seen = std.StringHashMap(void).init(self.allocator);
+        defer seen.deinit();
+
+        var write_index: usize = 0;
+        for (self.rules.items, 0..) |*rule, read_index| {
+            // Create a unique key for this rule
+            const key = try self.getRuleKey(rule);
+            defer self.allocator.free(key);
+
+            const gop = try seen.getOrPut(key);
+            if (!gop.found_existing) {
+                // Keep this rule
+                if (write_index != read_index) {
+                    self.rules.items[write_index] = self.rules.items[read_index];
+                }
+                write_index += 1;
+
+                // Store the key for deduplication
+                gop.key_ptr.* = try self.allocator.dupe(u8, key);
+            } else {
+                // Duplicate rule, clean it up
+                rule.deinit(self.allocator);
+            }
+        }
+
+        // Shrink the array
+        self.rules.items.len = write_index;
+    }
+
+    fn getRuleKey(self: *CSSGenerator, rule: *const CSSRule) ![]const u8 {
+        var key = string_utils.StringBuilder.init(self.allocator);
+        errdefer key.deinit();
+
+        try key.append(rule.selector);
+        try key.append("|");
+
+        if (rule.media) |media| {
+            try key.append(media);
+        }
+        try key.append("|");
+
+        if (rule.pseudo) |pseudo| {
+            try key.append(pseudo);
+        }
+        try key.append("|");
+
+        if (rule.is_important) {
+            try key.append("!");
+        }
+
+        return key.toOwnedSlice();
     }
 
     // Import utility modules
