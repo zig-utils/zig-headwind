@@ -27,6 +27,15 @@ pub const FileCache = @import("cache/file_cache.zig").FileCache;
 pub const CSSGenerator = @import("generator/css_generator.zig").CSSGenerator;
 pub const CSSRule = @import("generator/css_generator.zig").CSSRule;
 
+// Plugin system
+pub const Plugin = @import("plugin/plugin.zig").Plugin;
+pub const PluginContext = @import("plugin/plugin.zig").PluginContext;
+pub const PluginRegistry = @import("plugin/plugin.zig").PluginRegistry;
+
+// Built-in plugins
+pub const typographyPlugin = @import("plugin/typography.zig").typographyPlugin;
+pub const formsPlugin = @import("plugin/forms.zig").formsPlugin;
+
 // Re-export commonly used types
 pub const HeadwindError = types.HeadwindError;
 pub const HeadwindConfig = config.HeadwindConfig;
@@ -143,6 +152,50 @@ pub const Headwind = struct {
             try css.append("\n");
         }
 
+        // Initialize plugin system
+        var plugin_ctx = PluginContext.init(self.allocator, &self.config);
+        defer plugin_ctx.deinit();
+
+        var plugin_registry = PluginRegistry.init(self.allocator);
+        defer plugin_registry.deinit();
+
+        // Register built-in plugins
+        try plugin_registry.register(Plugin.init(self.allocator, "forms", formsPlugin));
+        try plugin_registry.register(Plugin.init(self.allocator, "typography", typographyPlugin));
+
+        // Execute all plugins
+        try plugin_registry.executeAll(&plugin_ctx);
+
+        // Add plugin base styles
+        if (plugin_ctx.base_styles.items.len > 0) {
+            try css.append("  /* Plugin Base Styles */\n");
+            for (plugin_ctx.base_styles.items) |*style| {
+                const style_css = try style.toCss(self.allocator);
+                defer self.allocator.free(style_css);
+                try css.append("  ");
+                try css.append(style_css);
+                try css.append("\n");
+            }
+            try css.append("\n");
+        }
+
+        try css.append("}\n\n");
+
+        // Components layer
+        try css.append("@layer components {\n");
+
+        // Add plugin component styles
+        if (plugin_ctx.component_styles.items.len > 0) {
+            try css.append("  /* Plugin Components */\n");
+            for (plugin_ctx.component_styles.items) |*style| {
+                const style_css = try style.toCss(self.allocator);
+                defer self.allocator.free(style_css);
+                try css.append("  ");
+                try css.append(style_css);
+                try css.append("\n");
+            }
+        }
+
         try css.append("}\n\n");
 
         // Utilities layer
@@ -165,6 +218,18 @@ pub const Headwind = struct {
             if (line.len > 0) {
                 try css.append("  ");
                 try css.append(line);
+                try css.append("\n");
+            }
+        }
+
+        // Add plugin utility styles
+        if (plugin_ctx.utility_styles.items.len > 0) {
+            try css.append("\n  /* Plugin Utilities */\n");
+            for (plugin_ctx.utility_styles.items) |*style| {
+                const style_css = try style.toCss(self.allocator);
+                defer self.allocator.free(style_css);
+                try css.append("  ");
+                try css.append(style_css);
                 try css.append("\n");
             }
         }
