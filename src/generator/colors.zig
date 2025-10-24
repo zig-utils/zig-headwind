@@ -6,7 +6,7 @@ const class_parser = @import("../parser/class_parser.zig");
 /// Tailwind color palette (simplified - just common colors with main shades)
 const ColorShade = struct { shade: []const u8, value: []const u8 };
 
-const colors = std.StaticStringMap([]const ColorShade).initComptime(.{
+pub const colors = std.StaticStringMap([]const ColorShade).initComptime(.{
     .{ "slate", &.{
         ColorShade{ .shade = "50", .value = "#f8fafc" },
         ColorShade{ .shade = "100", .value = "#f1f5f9" },
@@ -83,7 +83,7 @@ const colors = std.StaticStringMap([]const ColorShade).initComptime(.{
     .{ "black", &.{ColorShade{ .shade = "", .value = "#000000" }} },
 });
 
-fn getColorValue(color_name: []const u8, shade: []const u8) ?[]const u8 {
+pub fn getColorValue(color_name: []const u8, shade: []const u8) ?[]const u8 {
     const shades = colors.get(color_name) orelse return null;
     for (shades) |s| {
         if (std.mem.eql(u8, s.shade, shade)) {
@@ -94,7 +94,7 @@ fn getColorValue(color_name: []const u8, shade: []const u8) ?[]const u8 {
 }
 
 /// Parse color-shade pattern (e.g., "blue-500" -> "blue", "500")
-fn parseColorShade(value: []const u8) ?struct { color: []const u8, shade: []const u8 } {
+pub fn parseColorShade(value: []const u8) ?struct { color: []const u8, shade: []const u8 } {
     // Find last dash
     var i: usize = value.len;
     while (i > 0) {

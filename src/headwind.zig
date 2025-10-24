@@ -107,15 +107,31 @@ pub const Headwind = struct {
         try css.append(version);
         try css.append(" - Generated */\n\n");
 
+        // CSS Layers
+        try css.append("@layer base, components, utilities;\n\n");
+
+        // Base layer
+        try css.append("@layer base {\n");
+
+        // CSS Custom Properties (theme variables)
+        const css_variables_module = @import("generator/css_variables.zig");
+        const theme_vars = try css_variables_module.generateThemeVariables(self.allocator);
+        defer self.allocator.free(theme_vars);
+        try css.append(theme_vars);
+        try css.append("\n");
+
         // Preflight (if enabled)
         if (self.config.build.preflight) {
-            try css.append("/* Preflight */\n");
-            try css.append("*, ::before, ::after { box-sizing: border-box; }\n");
-            try css.append("body { margin: 0; line-height: inherit; }\n\n");
+            try css.append("  /* Preflight */\n");
+            try css.append("  *, ::before, ::after { box-sizing: border-box; }\n");
+            try css.append("  body { margin: 0; line-height: inherit; }\n");
         }
 
-        // Generate utilities
-        try css.append("/* Utilities */\n");
+        try css.append("}\n\n");
+
+        // Utilities layer
+        try css.append("@layer utilities {\n");
+        try css.append("  /* Utilities */\n");
 
         var generator = CSSGenerator.init(self.allocator);
         defer generator.deinit();
@@ -126,7 +142,18 @@ pub const Headwind = struct {
 
         const utilities_css = try generator.generate();
         defer self.allocator.free(utilities_css);
-        try css.append(utilities_css);
+
+        // Indent utilities
+        var lines = std.mem.splitSequence(u8, utilities_css, "\n");
+        while (lines.next()) |line| {
+            if (line.len > 0) {
+                try css.append("  ");
+                try css.append(line);
+                try css.append("\n");
+            }
+        }
+
+        try css.append("}\n");
 
         self.stats.css_rules_generated = generator.rules.items.len;
 

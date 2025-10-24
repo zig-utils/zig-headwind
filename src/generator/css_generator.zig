@@ -149,11 +149,28 @@ pub const CSSGenerator = struct {
         } else if (std.mem.startsWith(u8, utility_name, "font")) {
             try self.generateFont(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "bg")) {
-            try self.generateBackground(parsed, utility_parts.value);
+            // Check if it's a gradient utility
+            if (utility_parts.value) |val| {
+                if (std.mem.startsWith(u8, val, "gradient")) {
+                    // bg-gradient-to-r -> extract "to-r"
+                    const gradient_part = val[9..]; // Skip "gradient-"
+                    try self.generateBackgroundGradient(parsed, gradient_part);
+                } else {
+                    try self.generateBackground(parsed, utility_parts.value);
+                }
+            } else {
+                try self.generateBackground(parsed, utility_parts.value);
+            }
         } else if (std.mem.startsWith(u8, utility_name, "border")) {
             try self.generateBorder(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "rounded")) {
             try self.generateBorderRadius(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "from")) {
+            try self.generateGradientFrom(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "via")) {
+            try self.generateGradientVia(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "to")) {
+            try self.generateGradientTo(parsed, utility_parts.value);
         }
         // More utilities will be added...
     }
@@ -366,6 +383,8 @@ pub const CSSGenerator = struct {
     const colors = @import("colors.zig");
     const sizing = @import("sizing.zig");
     const borders = @import("borders.zig");
+    const gradients = @import("gradients.zig");
+    const modern_colors = @import("modern_colors.zig");
 
     fn generatePadding(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
         return spacing.generatePadding(self, parsed, value);
@@ -405,6 +424,22 @@ pub const CSSGenerator = struct {
 
     fn generateBorderRadius(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
         return borders.generateBorderRadius(self, parsed, value);
+    }
+
+    fn generateGradientFrom(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return gradients.generateGradientFrom(self, parsed, value);
+    }
+
+    fn generateGradientVia(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return gradients.generateGradientVia(self, parsed, value);
+    }
+
+    fn generateGradientTo(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return gradients.generateGradientTo(self, parsed, value);
+    }
+
+    fn generateBackgroundGradient(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return gradients.generateBackgroundGradient(self, parsed, value);
     }
 };
 

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Phase 5 Test - Modern CSS Features</title>
+</head>
+<body>
+    <!-- Gradient utilities -->
+    <div class="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
+        Linear gradient with color stops
+    </div>
+
+    <div class="bg-gradient-to-br from-green-400 to-blue-600">
+        Diagonal gradient
+    </div>
+
+    <div class="bg-gradient-to-t from-yellow-400 via-red-500 to-pink-500">
+        Vertical gradient with via
+    </div>
+
+    <!-- CSS variables in utilities (these will use the generated theme vars) -->
+    <div class="bg-blue-500 text-white p-4">
+        Using theme colors (will use CSS variables internally)
+    </div>
+
+    <!-- Combining gradients with other utilities -->
+    <button class="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 px-6 py-3 rounded-lg text-white font-bold">
+        Gradient button with hover
+    </button>
+
+    <!-- Multiple gradient directions -->
+    <div class="bg-gradient-to-tl from-cyan-500 to-blue-500">Top-left gradient</div>
+    <div class="bg-gradient-to-tr from-green-500 to-teal-500">Top-right gradient</div>
+    <div class="bg-gradient-to-bl from-orange-500 to-red-500">Bottom-left gradient</div>
+    <div class="bg-gradient-to-l from-indigo-500 to-purple-500">Left gradient</div>
+
+    <!-- Dark mode with gradients -->
+    <div class="bg-gradient-to-r from-blue-500 to-purple-500 dark:from-blue-900 dark:to-purple-900">
+        Dark mode gradient
+    </div>
+
+    <!-- Responsive gradients -->
+    <div class="bg-gradient-to-r from-red-500 to-yellow-500 md:from-green-500 md:to-blue-500">
+        Responsive gradient colors
+    </div>
+
+    <!-- Testing basic utilities with CSS layers -->
+    <div class="p-8 m-4 rounded-xl shadow-lg">
+        Content with utilities in @layer utilities
+    </div>
+</body>
+</html>
