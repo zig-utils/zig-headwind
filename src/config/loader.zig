@@ -3,6 +3,8 @@ const zig_config = @import("zig-config");
 const schema = @import("schema.zig");
 
 /// Load Headwind configuration using zig-config
+/// Note: The returned config owns its memory. Strings and arrays in the config
+/// must be freed by the caller using the same allocator.
 pub fn loadConfig(allocator: std.mem.Allocator, options: LoadOptions) !schema.HeadwindConfig {
     // Use zig-config to load configuration
     var config_result = try zig_config.loadConfig(
@@ -14,7 +16,9 @@ pub fn loadConfig(allocator: std.mem.Allocator, options: LoadOptions) !schema.He
             .env_prefix = "HEADWIND",
         },
     );
-    defer config_result.deinit(allocator);
+    // Don't deinit - the caller owns the config now
+    // The parsed data is owned by the returned value
+    errdefer config_result.deinit(allocator);
 
     // Validate the configuration
     try schema.validate(&config_result.value);

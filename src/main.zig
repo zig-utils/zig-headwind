@@ -83,9 +83,10 @@ fn buildCommand(allocator: std.mem.Allocator, args: [][:0]u8) !void {
     std.debug.print("\n✓ Built successfully in {d}ms\n", .{duration});
     std.debug.print("  Output: {s}\n", .{output_path});
     std.debug.print("  Size: {d} bytes\n", .{css.len});
-    if (stats.files_scanned > 0) {
-        std.debug.print("  Files scanned: {d}\n", .{stats.files_scanned});
-        std.debug.print("  Classes extracted: {d}\n", .{stats.classes_extracted});
+    std.debug.print("  Files scanned: {d}\n", .{stats.files_scanned});
+    std.debug.print("  Classes extracted: {d}\n", .{stats.classes_extracted});
+    if (stats.cache_hits > 0 or stats.cache_misses > 0) {
+        std.debug.print("  Cache hits: {d}, misses: {d}\n", .{ stats.cache_hits, stats.cache_misses });
     }
 }
 

@@ -1,7 +1,7 @@
 {
   "content": {
     "files": [
-      "src/**/*.{html,js,jsx,ts,tsx,vue,svelte}"
+      "*.html"
     ]
   },
   "theme": {
