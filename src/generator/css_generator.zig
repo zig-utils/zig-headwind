@@ -9,6 +9,7 @@ pub const CSSRule = struct {
     declarations: std.StringHashMap([]const u8),
     media: ?[]const u8 = null,
     pseudo: ?[]const u8 = null,
+    is_important: bool = false,
 
     pub fn init(allocator: std.mem.Allocator, selector: []const u8) !CSSRule {
         return .{
@@ -67,6 +68,7 @@ pub const CSSRule = struct {
             try result.append(entry.key_ptr.*);
             try result.append(": ");
             try result.append(entry.value_ptr.*);
+            if (self.is_important) try result.append(" !important");
             first = false;
         }
 
@@ -219,6 +221,7 @@ pub const CSSGenerator = struct {
         try selector.append(parsed.raw);
 
         var rule = try CSSRule.init(self.allocator, selector.toString());
+        rule.is_important = parsed.is_important;
 
         // Apply variants (media queries, pseudo-classes, etc.)
         for (parsed.variants) |variant| {
@@ -229,26 +232,116 @@ pub const CSSGenerator = struct {
     }
 
     fn applyVariant(self: *CSSGenerator, rule: *CSSRule, variant: []const u8) !void {
+        const variants_module = @import("variants.zig");
 
-        // Pseudo-class variants
-        if (std.mem.eql(u8, variant, "hover")) {
-            rule.pseudo = try self.allocator.dupe(u8, ":hover");
-        } else if (std.mem.eql(u8, variant, "focus")) {
-            rule.pseudo = try self.allocator.dupe(u8, ":focus");
-        } else if (std.mem.eql(u8, variant, "active")) {
-            rule.pseudo = try self.allocator.dupe(u8, ":active");
-        }
-        // Responsive variants
-        else if (std.mem.eql(u8, variant, "sm")) {
-            rule.media = try self.allocator.dupe(u8, "@media (min-width: 640px)");
-        } else if (std.mem.eql(u8, variant, "md")) {
-            rule.media = try self.allocator.dupe(u8, "@media (min-width: 768px)");
-        } else if (std.mem.eql(u8, variant, "lg")) {
-            rule.media = try self.allocator.dupe(u8, "@media (min-width: 1024px)");
-        } else if (std.mem.eql(u8, variant, "xl")) {
-            rule.media = try self.allocator.dupe(u8, "@media (min-width: 1280px)");
-        } else if (std.mem.eql(u8, variant, "2xl")) {
-            rule.media = try self.allocator.dupe(u8, "@media (min-width: 1536px)");
+        const variant_def = variants_module.getVariantCSS(variant) orelse return;
+
+        switch (variant_def.type) {
+            .pseudo_class, .pseudo_element => {
+                // Append to existing pseudo if there is one (for stacking like hover:focus)
+                if (rule.pseudo) |existing| {
+                    const combined = try std.fmt.allocPrint(
+                        self.allocator,
+                        "{s}{s}",
+                        .{ existing, variant_def.css },
+                    );
+                    self.allocator.free(existing);
+                    rule.pseudo = combined;
+                } else {
+                    rule.pseudo = try self.allocator.dupe(u8, variant_def.css);
+                }
+            },
+            .responsive, .media_query => {
+                // Media queries wrap the entire rule
+                if (rule.media) |existing| {
+                    // For now, just use the new one (later we can support nested media queries)
+                    self.allocator.free(existing);
+                }
+                rule.media = try self.allocator.dupe(u8, variant_def.css);
+            },
+            .dark_mode => {
+                // Dark mode uses a parent selector
+                if (rule.pseudo) |existing| {
+                    const combined = try std.fmt.allocPrint(
+                        self.allocator,
+                        ".dark {s}",
+                        .{existing},
+                    );
+                    self.allocator.free(existing);
+                    rule.pseudo = combined;
+                } else {
+                    rule.pseudo = try self.allocator.dupe(u8, ".dark ");
+                }
+            },
+            .group => {
+                // Group variants like group-hover
+                const state = variant[6..]; // Remove "group-" prefix
+                if (variants_module.pseudo_class_variants.get(state)) |pseudo| {
+                    const group_selector = try std.fmt.allocPrint(
+                        self.allocator,
+                        ".group{s} ",
+                        .{pseudo},
+                    );
+                    if (rule.pseudo) |existing| {
+                        const combined = try std.fmt.allocPrint(
+                            self.allocator,
+                            "{s}{s}",
+                            .{ group_selector, existing },
+                        );
+                        self.allocator.free(group_selector);
+                        self.allocator.free(existing);
+                        rule.pseudo = combined;
+                    } else {
+                        rule.pseudo = group_selector;
+                    }
+                }
+            },
+            .peer => {
+                // Peer variants like peer-checked
+                const state = variant[5..]; // Remove "peer-" prefix
+                if (variants_module.pseudo_class_variants.get(state)) |pseudo| {
+                    const peer_selector = try std.fmt.allocPrint(
+                        self.allocator,
+                        ".peer{s} ~ ",
+                        .{pseudo},
+                    );
+                    if (rule.pseudo) |existing| {
+                        const combined = try std.fmt.allocPrint(
+                            self.allocator,
+                            "{s}{s}",
+                            .{ peer_selector, existing },
+                        );
+                        self.allocator.free(peer_selector);
+                        self.allocator.free(existing);
+                        rule.pseudo = combined;
+                    } else {
+                        rule.pseudo = peer_selector;
+                    }
+                }
+            },
+            .attribute => {
+                // ARIA and data attributes
+                const attr_selector = try std.fmt.allocPrint(
+                    self.allocator,
+                    "[{s}]",
+                    .{variant},
+                );
+                if (rule.pseudo) |existing| {
+                    const combined = try std.fmt.allocPrint(
+                        self.allocator,
+                        "{s}{s}",
+                        .{ attr_selector, existing },
+                    );
+                    self.allocator.free(attr_selector);
+                    self.allocator.free(existing);
+                    rule.pseudo = combined;
+                } else {
+                    rule.pseudo = attr_selector;
+                }
+            },
+            .state, .container => {
+                // Not yet implemented
+            },
         }
     }
 

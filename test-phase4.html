@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Phase 4 Test - Advanced Variants</title>
+</head>
+<body>
+    <!-- Pseudo-class variants -->
+    <button class="bg-blue-500 hover:bg-blue-600 focus:bg-blue-700 active:bg-blue-800">
+        Multi-state button
+    </button>
+
+    <!-- Pseudo-element variants -->
+    <div class="before:content-['→'] after:content-['←']">
+        With pseudo-elements
+    </div>
+
+    <!-- More pseudo-classes -->
+    <input class="disabled:opacity-50 checked:bg-green-500 invalid:border-red-500" />
+
+    <!-- Structural pseudo-classes -->
+    <div class="first:font-bold last:text-gray-500 odd:bg-gray-100 even:bg-white">
+        List items
+    </div>
+
+    <!-- Responsive breakpoints -->
+    <div class="text-sm md:text-base lg:text-lg xl:text-xl 2xl:text-2xl">
+        Responsive text
+    </div>
+
+    <!-- Max-width breakpoints -->
+    <div class="block max-md:hidden">
+        Hidden on mobile
+    </div>
+
+    <!-- Dark mode -->
+    <div class="bg-white dark:bg-gray-900 text-black dark:text-white">
+        Dark mode support
+    </div>
+
+    <!-- Group variants -->
+    <div class="group">
+        <div class="opacity-0 group-hover:opacity-100">
+            Appears on parent hover
+        </div>
+    </div>
+
+    <!-- Peer variants -->
+    <input class="peer" type="checkbox" />
+    <label class="peer-checked:text-green-500 peer-focus:font-bold">
+        Label changes when checkbox is checked or focused
+    </label>
+
+    <!-- Important modifier -->
+    <div class="!text-red-500 !p-4">
+        Important styles
+    </div>
+
+    <!-- Variant stacking -->
+    <div class="md:hover:focus:bg-blue-500">
+        Multiple stacked variants
+    </div>
+
+    <!-- Media query variants -->
+    <div class="motion-safe:animate-bounce print:hidden">
+        Motion and print variants
+    </div>
+
+    <!-- Focus variants -->
+    <input class="focus-visible:ring-2 focus-within:border-blue-500" />
+
+    <!-- Form state variants -->
+    <input class="required:border-red-300 valid:border-green-500" required />
+
+    <!-- Combination of everything -->
+    <button class="!bg-blue-500 hover:!bg-blue-600 md:!p-4 dark:!bg-blue-900">
+        Complex variant combinations
+    </button>
+</body>
+</html>
