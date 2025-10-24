@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 6: Transforms, Effects & Interactivity</title>
+    <link rel="stylesheet" href="dist/headwind.css">
+</head>
+<body>
+    <h1>Phase 6: Transforms, Effects & Interactivity Tests</h1>
+
+    <!-- Transform utilities -->
+    <section>
+        <h2>Transforms</h2>
+        <div class="scale-100 hover:scale-110 transition duration-300">Scale on hover</div>
+        <div class="rotate-45">Rotated 45 degrees</div>
+        <div class="translate-x-4 translate-y-2">Translated</div>
+        <div class="skew-x-12 skew-y-6">Skewed</div>
+        <div class="origin-top-left rotate-12">Rotate from top-left origin</div>
+    </section>
+
+    <!-- Filter utilities -->
+    <section>
+        <h2>Filters</h2>
+        <div class="blur hover:blur-none transition">Blur effect</div>
+        <div class="brightness-150">Brightened</div>
+        <div class="contrast-125">High contrast</div>
+        <div class="grayscale hover:grayscale-0 transition">Grayscale to color on hover</div>
+        <div class="hue-rotate-90">Hue rotated</div>
+        <div class="invert">Inverted</div>
+        <div class="saturate-200">Saturated</div>
+        <div class="sepia">Sepia tone</div>
+        <div class="drop-shadow-lg">Drop shadow</div>
+    </section>
+
+    <!-- Backdrop filters -->
+    <section>
+        <h2>Backdrop Filters</h2>
+        <div class="backdrop-blur-sm">Backdrop blur</div>
+        <div class="backdrop-brightness-125">Backdrop brightness</div>
+        <div class="backdrop-contrast-150">Backdrop contrast</div>
+        <div class="backdrop-grayscale">Backdrop grayscale</div>
+    </section>
+
+    <!-- Shadow utilities -->
+    <section>
+        <h2>Shadows</h2>
+        <div class="shadow-sm">Small shadow</div>
+        <div class="shadow">Default shadow</div>
+        <div class="shadow-md">Medium shadow</div>
+        <div class="shadow-lg">Large shadow</div>
+        <div class="shadow-xl">Extra large shadow</div>
+        <div class="shadow-2xl">2XL shadow</div>
+        <div class="shadow-inner">Inner shadow</div>
+        <div class="shadow-none hover:shadow-lg transition">Shadow on hover</div>
+    </section>
+
+    <!-- Transition utilities -->
+    <section>
+        <h2>Transitions</h2>
+        <div class="transition">Default transition</div>
+        <div class="transition-all duration-500">All properties, 500ms</div>
+        <div class="transition-colors duration-300 ease-in-out">Color transitions</div>
+        <div class="transition-opacity duration-200 delay-100">Opacity with delay</div>
+        <div class="transition-transform ease-linear duration-700">Transform transition</div>
+    </section>
+
+    <!-- Animation utilities -->
+    <section>
+        <h2>Animations</h2>
+        <div class="animate-spin">Spinning</div>
+        <div class="animate-ping">Pinging</div>
+        <div class="animate-pulse">Pulsing</div>
+        <div class="animate-bounce">Bouncing</div>
+        <div class="animate-none">No animation</div>
+        <button class="hover:animate-bounce transition">Bounce on hover</button>
+    </section>
+
+    <!-- Interactivity utilities -->
+    <section>
+        <h2>Interactivity</h2>
+        <button class="cursor-pointer">Pointer cursor</button>
+        <div class="cursor-not-allowed">Not allowed cursor</div>
+        <div class="cursor-wait">Wait cursor</div>
+        <div class="cursor-move">Move cursor</div>
+        <div class="cursor-help">Help cursor</div>
+
+        <div class="pointer-events-none">No pointer events</div>
+        <div class="pointer-events-auto">Auto pointer events</div>
+
+        <textarea class="resize-none">Not resizable</textarea>
+        <textarea class="resize">Resizable both</textarea>
+        <textarea class="resize-x">Resizable horizontally</textarea>
+        <textarea class="resize-y">Resizable vertically</textarea>
+
+        <div class="scroll-auto">Auto scroll</div>
+        <div class="scroll-smooth">Smooth scroll</div>
+
+        <p class="select-none">Cannot select this text</p>
+        <p class="select-text">Can select this text</p>
+        <p class="select-all">Click to select all</p>
+        <p class="select-auto">Auto selection</p>
+
+        <input class="appearance-none">Input without appearance</input>
+        <input class="caret-blue-500">Blue caret</input>
+        <input class="accent-green-500">Green accent (checkbox/radio)</input>
+
+        <div class="will-change-auto">Auto will-change</div>
+        <div class="will-change-transform">Will change transform</div>
+    </section>
+
+    <!-- Combined effects -->
+    <section>
+        <h2>Combined Effects</h2>
+        <button class="
+            px-6 py-3
+            bg-blue-500 hover:bg-blue-600
+            text-white font-bold rounded-lg
+            shadow-lg hover:shadow-2xl
+            scale-100 hover:scale-105
+            transition-all duration-300 ease-in-out
+            cursor-pointer
+            select-none
+        ">
+            Hover me!
+        </button>
+
+        <div class="
+            blur-sm hover:blur-none
+            brightness-90 hover:brightness-100
+            saturate-50 hover:saturate-100
+            scale-95 hover:scale-100
+            rotate-1 hover:rotate-0
+            transition-all duration-500
+            shadow-md hover:shadow-xl
+            cursor-pointer
+        ">
+            Multi-effect transition
+        </div>
+
+        <div class="
+            animate-pulse
+            shadow-lg
+            backdrop-blur
+            transition duration-300
+            hover:animate-bounce
+        ">
+            Animated with backdrop
+        </div>
+    </section>
+
+    <!-- Responsive + variants -->
+    <section>
+        <h2>Responsive & Variant Combinations</h2>
+        <div class="
+            scale-100
+            hover:scale-110
+            md:scale-105
+            md:hover:scale-125
+            transition-transform duration-300
+        ">
+            Responsive scaling
+        </div>
+
+        <button class="
+            cursor-pointer
+            transition-all duration-300
+            scale-100 hover:scale-110
+            shadow hover:shadow-lg
+            blur-0 focus:blur-sm
+            brightness-100 active:brightness-90
+        ">
+            Multi-variant button
+        </button>
+
+        <div class="
+            animate-pulse
+            hover:animate-spin
+            md:animate-bounce
+            lg:animate-ping
+        ">
+            Responsive animations
+        </div>
+    </section>
+</body>
+</html>

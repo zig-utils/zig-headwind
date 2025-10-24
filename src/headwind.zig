@@ -120,6 +120,21 @@ pub const Headwind = struct {
         try css.append(theme_vars);
         try css.append("\n");
 
+        // Animation keyframes
+        const animations_module = @import("generator/animations.zig");
+        const keyframes = try animations_module.generateKeyframes(self.allocator);
+        defer self.allocator.free(keyframes);
+        try css.append("  /* Keyframes */\n");
+        var keyframe_lines = std.mem.splitSequence(u8, keyframes, "\n");
+        while (keyframe_lines.next()) |line| {
+            if (line.len > 0) {
+                try css.append("  ");
+                try css.append(line);
+                try css.append("\n");
+            }
+        }
+        try css.append("\n");
+
         // Preflight (if enabled)
         if (self.config.build.preflight) {
             try css.append("  /* Preflight */\n");

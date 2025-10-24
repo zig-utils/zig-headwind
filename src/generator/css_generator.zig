@@ -171,6 +171,86 @@ pub const CSSGenerator = struct {
             try self.generateGradientVia(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "to")) {
             try self.generateGradientTo(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "scale")) {
+            if (std.mem.indexOf(u8, utility_name, "-x")) |_| {
+                try self.generateScaleX(parsed, utility_parts.value);
+            } else if (std.mem.indexOf(u8, utility_name, "-y")) |_| {
+                try self.generateScaleY(parsed, utility_parts.value);
+            } else {
+                try self.generateScale(parsed, utility_parts.value);
+            }
+        } else if (std.mem.startsWith(u8, utility_name, "rotate")) {
+            try self.generateRotate(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "translate")) {
+            if (std.mem.indexOf(u8, utility_name, "-x")) |_| {
+                try self.generateTranslateX(parsed, utility_parts.value);
+            } else if (std.mem.indexOf(u8, utility_name, "-y")) |_| {
+                try self.generateTranslateY(parsed, utility_parts.value);
+            }
+        } else if (std.mem.startsWith(u8, utility_name, "skew")) {
+            if (std.mem.indexOf(u8, utility_name, "-x")) |_| {
+                try self.generateSkewX(parsed, utility_parts.value);
+            } else if (std.mem.indexOf(u8, utility_name, "-y")) |_| {
+                try self.generateSkewY(parsed, utility_parts.value);
+            }
+        } else if (std.mem.startsWith(u8, utility_name, "origin")) {
+            try self.generateOrigin(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "blur")) {
+            try self.generateBlur(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "brightness")) {
+            try self.generateBrightness(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "contrast")) {
+            try self.generateContrast(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "grayscale")) {
+            try self.generateGrayscale(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "hue-rotate")) {
+            try self.generateHueRotate(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "invert")) {
+            try self.generateInvert(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "saturate")) {
+            try self.generateSaturate(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "sepia")) {
+            try self.generateSepia(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "drop-shadow")) {
+            try self.generateDropShadow(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "backdrop-blur")) {
+            try self.generateBackdropBlur(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "backdrop-brightness")) {
+            try self.generateBackdropBrightness(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "backdrop-contrast")) {
+            try self.generateBackdropContrast(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "backdrop-grayscale")) {
+            try self.generateBackdropGrayscale(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "shadow")) {
+            try self.generateShadow(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "transition")) {
+            try self.generateTransition(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "duration")) {
+            try self.generateDuration(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "ease")) {
+            try self.generateEase(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "delay")) {
+            try self.generateDelay(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "animate")) {
+            try self.generateAnimate(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "cursor")) {
+            try self.generateCursor(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "pointer-events")) {
+            try self.generatePointerEvents(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "resize")) {
+            try self.generateResize(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "scroll")) {
+            try self.generateScrollBehavior(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "select")) {
+            try self.generateSelect(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "appearance")) {
+            try self.generateAppearance(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "caret")) {
+            try self.generateCaretColor(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "accent")) {
+            try self.generateAccentColor(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "will-change")) {
+            try self.generateWillChange(parsed, utility_parts.value);
         }
         // More utilities will be added...
     }
@@ -385,6 +465,12 @@ pub const CSSGenerator = struct {
     const borders = @import("borders.zig");
     const gradients = @import("gradients.zig");
     const modern_colors = @import("modern_colors.zig");
+    const transforms = @import("transforms.zig");
+    const filters = @import("filters.zig");
+    const shadows = @import("shadows.zig");
+    const transitions = @import("transitions.zig");
+    const animations = @import("animations.zig");
+    const interactivity = @import("interactivity.zig");
 
     fn generatePadding(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
         return spacing.generatePadding(self, parsed, value);
@@ -440,6 +526,160 @@ pub const CSSGenerator = struct {
 
     fn generateBackgroundGradient(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
         return gradients.generateBackgroundGradient(self, parsed, value);
+    }
+
+    // Transform utilities
+    fn generateScale(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transforms.generateScale(self, parsed, value);
+    }
+
+    fn generateScaleX(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transforms.generateScaleX(self, parsed, value);
+    }
+
+    fn generateScaleY(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transforms.generateScaleY(self, parsed, value);
+    }
+
+    fn generateRotate(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transforms.generateRotate(self, parsed, value);
+    }
+
+    fn generateTranslateX(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transforms.generateTranslateX(self, parsed, value);
+    }
+
+    fn generateTranslateY(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transforms.generateTranslateY(self, parsed, value);
+    }
+
+    fn generateSkewX(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transforms.generateSkewX(self, parsed, value);
+    }
+
+    fn generateSkewY(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transforms.generateSkewY(self, parsed, value);
+    }
+
+    fn generateOrigin(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transforms.generateOrigin(self, parsed, value);
+    }
+
+    // Filter utilities
+    fn generateBlur(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return filters.generateBlur(self, parsed, value);
+    }
+
+    fn generateBrightness(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return filters.generateBrightness(self, parsed, value);
+    }
+
+    fn generateContrast(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return filters.generateContrast(self, parsed, value);
+    }
+
+    fn generateGrayscale(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return filters.generateGrayscale(self, parsed, value);
+    }
+
+    fn generateHueRotate(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return filters.generateHueRotate(self, parsed, value);
+    }
+
+    fn generateInvert(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return filters.generateInvert(self, parsed, value);
+    }
+
+    fn generateSaturate(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return filters.generateSaturate(self, parsed, value);
+    }
+
+    fn generateSepia(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return filters.generateSepia(self, parsed, value);
+    }
+
+    fn generateDropShadow(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return filters.generateDropShadow(self, parsed, value);
+    }
+
+    fn generateBackdropBlur(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return filters.generateBackdropBlur(self, parsed, value);
+    }
+
+    fn generateBackdropBrightness(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return filters.generateBackdropBrightness(self, parsed, value);
+    }
+
+    fn generateBackdropContrast(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return filters.generateBackdropContrast(self, parsed, value);
+    }
+
+    fn generateBackdropGrayscale(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return filters.generateBackdropGrayscale(self, parsed, value);
+    }
+
+    // Shadow utilities
+    fn generateShadow(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return shadows.generateShadow(self, parsed, value);
+    }
+
+    // Transition utilities
+    fn generateTransition(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transitions.generateTransition(self, parsed, value);
+    }
+
+    fn generateDuration(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transitions.generateDuration(self, parsed, value);
+    }
+
+    fn generateEase(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transitions.generateEase(self, parsed, value);
+    }
+
+    fn generateDelay(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transitions.generateDelay(self, parsed, value);
+    }
+
+    // Animation utilities
+    fn generateAnimate(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return animations.generateAnimate(self, parsed, value);
+    }
+
+    // Interactivity utilities
+    fn generateCursor(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return interactivity.generateCursor(self, parsed, value);
+    }
+
+    fn generatePointerEvents(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return interactivity.generatePointerEvents(self, parsed, value);
+    }
+
+    fn generateResize(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return interactivity.generateResize(self, parsed, value);
+    }
+
+    fn generateScrollBehavior(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return interactivity.generateScrollBehavior(self, parsed, value);
+    }
+
+    fn generateSelect(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return interactivity.generateSelect(self, parsed, value);
+    }
+
+    fn generateAppearance(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return interactivity.generateAppearance(self, parsed, value);
+    }
+
+    fn generateCaretColor(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return interactivity.generateCaretColor(self, parsed, value);
+    }
+
+    fn generateAccentColor(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return interactivity.generateAccentColor(self, parsed, value);
+    }
+
+    fn generateWillChange(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return interactivity.generateWillChange(self, parsed, value);
     }
 };
 
