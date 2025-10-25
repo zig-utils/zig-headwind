@@ -107,9 +107,9 @@ A high-performance Tailwind CSS alternative built with Zig, targeting feature pa
    - [ ] @config directive for inline configuration
 
 10. **Advanced Variant Support**
-   - [ ] Named groups support (group/name)
-   - [ ] Named peer support (peer/name)
-   - [ ] Arbitrary value support (w-[100px], bg-[#ff5733], etc.)
+   - ✅ Named groups support (group/name) - COMPLETED
+   - ✅ Named peer support (peer/name) - COMPLETED
+   - ✅ Arbitrary value support (w-[100px], bg-[#ff5733], etc.) - COMPLETED
 
 9. **Performance Optimizations**
    - [ ] Multi-threading for parallel file scanning
@@ -272,22 +272,22 @@ A high-performance Tailwind CSS alternative built with Zig, targeting feature pa
 - [ ] Implement negative values (-m-*, -mt-*, etc.)
 
 ### Typography Utilities
-- [ ] Implement font-family utilities (font-sans, font-serif, font-mono)
-- [ ] Create font-size utilities (text-xs, text-sm, text-base, text-lg, text-xl, text-2xl, text-3xl, text-4xl, text-5xl, text-6xl, text-7xl, text-8xl, text-9xl)
-- [ ] Build font-weight utilities (font-thin, font-extralight, font-light, font-normal, font-medium, font-semibold, font-bold, font-extrabold, font-black)
-- [ ] Implement font-style utilities (italic, not-italic)
+- ✅ Implement font-family utilities (font-sans, font-serif, font-mono) - COMPLETED
+- ✅ Create font-size utilities (text-xs, text-sm, text-base, text-lg, text-xl, text-2xl, text-3xl, text-4xl, text-5xl, text-6xl, text-7xl, text-8xl, text-9xl) - COMPLETED
+- ✅ Build font-weight utilities (font-thin, font-extralight, font-light, font-normal, font-medium, font-semibold, font-bold, font-extrabold, font-black) - COMPLETED
+- ✅ Implement font-style utilities (italic, not-italic) - COMPLETED
 - [ ] Create font-variant-numeric utilities (ordinal, slashed-zero, etc.)
-- [ ] Build line-height utilities (leading-*)
-- [ ] Implement letter-spacing utilities (tracking-*)
-- [ ] Create text-align utilities (text-left, text-center, text-right, text-justify, text-start, text-end)
-- [ ] Build text-color utilities (text-*)
-- [ ] Implement text-decoration utilities (underline, overline, line-through, no-underline)
+- ✅ Build line-height utilities (leading-*) - COMPLETED
+- ✅ Implement letter-spacing utilities (tracking-*) - COMPLETED
+- ✅ Create text-align utilities (text-left, text-center, text-right, text-justify) - COMPLETED (text-start, text-end pending)
+- ✅ Build text-color utilities (text-*) - COMPLETED
+- ✅ Implement text-decoration utilities (underline, overline, line-through, no-underline) - COMPLETED
 - [ ] Create text-decoration-color utilities
 - [ ] Build text-decoration-style utilities
 - [ ] Implement text-decoration-thickness utilities
 - [ ] Create text-underline-offset utilities
-- [ ] Build text-transform utilities (uppercase, lowercase, capitalize, normal-case)
-- [ ] Implement text-overflow utilities (truncate, text-ellipsis, text-clip)
+- ✅ Build text-transform utilities (uppercase, lowercase, capitalize, normal-case) - COMPLETED
+- ✅ Implement text-overflow utilities (truncate, text-ellipsis, text-clip) - COMPLETED
 - [ ] Create text-wrap utilities (text-wrap, text-nowrap, text-balance, text-pretty)
 - [ ] Build text-indent utilities
 - [ ] Implement vertical-align utilities
@@ -395,9 +395,9 @@ A high-performance Tailwind CSS alternative built with Zig, targeting feature pa
 ## Phase 4: Advanced Features
 
 ### Arbitrary Value Support
-- [ ] Implement arbitrary value tokenizer ([100px])
-- [ ] Create arbitrary value validator
-- [ ] Build unit preservation (px, rem, em, %, vh, vw, etc.)
+- ✅ Implement arbitrary value tokenizer ([100px]) - COMPLETED
+- ✅ Create arbitrary value validator - COMPLETED
+- ✅ Build unit preservation (px, rem, em, %, vh, vw, etc.) - COMPLETED
 - [ ] Implement calc() expression support
 - [ ] Create CSS variable reference support (var(--foo))
 - [ ] Build arbitrary value escaping for special characters

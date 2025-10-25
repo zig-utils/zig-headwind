@@ -272,6 +272,21 @@ pub const CSSGenerator = struct {
             }
         } else if (std.mem.startsWith(u8, utility_name, "font")) {
             try self.generateFont(parsed, utility_parts.value);
+        } else if (std.mem.eql(u8, utility_name, "italic") or std.mem.eql(u8, utility_name, "not-italic")) {
+            try self.generateFontStyle(parsed);
+        } else if (std.mem.eql(u8, utility_name, "underline") or std.mem.eql(u8, utility_name, "overline") or
+                   std.mem.eql(u8, utility_name, "line-through") or std.mem.eql(u8, utility_name, "no-underline")) {
+            try self.generateTextDecoration(parsed);
+        } else if (std.mem.eql(u8, utility_name, "uppercase") or std.mem.eql(u8, utility_name, "lowercase") or
+                   std.mem.eql(u8, utility_name, "capitalize") or std.mem.eql(u8, utility_name, "normal-case")) {
+            try self.generateTextTransform(parsed);
+        } else if (std.mem.eql(u8, utility_name, "truncate") or std.mem.eql(u8, utility_name, "text-ellipsis") or
+                   std.mem.eql(u8, utility_name, "text-clip")) {
+            try self.generateTextOverflow(parsed);
+        } else if (std.mem.startsWith(u8, utility_name, "leading")) {
+            try self.generateLineHeight(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "tracking")) {
+            try self.generateLetterSpacing(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "bg")) {
             // Check for special background utilities
             if (utility_parts.value) |val| {
@@ -839,6 +854,30 @@ pub const CSSGenerator = struct {
 
     fn generateTextShadow(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
         return typography.generateTextShadow(self, parsed, value);
+    }
+
+    fn generateFontStyle(self: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
+        return typography.generateFontStyle(self, parsed);
+    }
+
+    fn generateTextDecoration(self: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
+        return typography.generateTextDecoration(self, parsed);
+    }
+
+    fn generateTextTransform(self: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
+        return typography.generateTextTransform(self, parsed);
+    }
+
+    fn generateTextOverflow(self: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
+        return typography.generateTextOverflow(self, parsed);
+    }
+
+    fn generateLineHeight(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return typography.generateLineHeight(self, parsed, value);
+    }
+
+    fn generateLetterSpacing(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return typography.generateLetterSpacing(self, parsed, value);
     }
 
     fn generateBackground(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {

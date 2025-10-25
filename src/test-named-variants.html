@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Named Groups & Peers Test</title>
+</head>
+<body>
+    <!-- Named groups test -->
+    <div class="group/sidebar bg-gray-100">
+        <h2>Sidebar (group/sidebar)</h2>
+        <div class="group-hover/sidebar:bg-blue-500">Should be blue on sidebar hover</div>
+        <div class="group-focus/sidebar:text-red-500">Should be red on sidebar focus</div>
+    </div>
+
+    <div class="group/card p-4">
+        <h2>Card (group/card)</h2>
+        <div class="group-hover/card:scale-110">Should scale on card hover</div>
+        <div class="group-focus/card:opacity-50">Should be semi-transparent on card focus</div>
+    </div>
+
+    <!-- Named peers test -->
+    <div>
+        <input type="checkbox" class="peer/checkbox" id="cb1" />
+        <label for="cb1" class="peer-checked/checkbox:font-bold">Bold when checkbox checked</label>
+        <div class="peer-checked/checkbox:bg-green-500">Green bg when checkbox checked</div>
+    </div>
+
+    <div>
+        <input type="checkbox" class="peer/toggle" id="cb2" />
+        <label for="cb2" class="peer-checked/toggle:text-blue-500">Blue when toggle checked</label>
+        <div class="peer-focus/toggle:ring-2">Ring when toggle focused</div>
+    </div>
+
+    <!-- Regular groups (should still work) -->
+    <div class="group">
+        <h2>Regular Group</h2>
+        <div class="group-hover:bg-purple-500">Purple on group hover</div>
+        <div class="group-focus:underline">Underline on group focus</div>
+    </div>
+
+    <!-- Regular peers (should still work) -->
+    <div>
+        <input type="checkbox" class="peer" id="cb3" />
+        <label for="cb3" class="peer-checked:text-blue-500">Blue when peer checked</label>
+        <div class="peer-focus:border-2">Border when peer focused</div>
+    </div>
+
+    <!-- Mixed variants with named groups -->
+    <div class="group/nav">
+        <div class="md:group-hover/nav:scale-110">Scale on nav hover at md breakpoint</div>
+        <div class="dark:group-focus/nav:text-white">White text on nav focus in dark mode</div>
+    </div>
+</body>
+</html>

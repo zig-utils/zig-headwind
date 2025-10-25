@@ -121,3 +121,130 @@ pub fn generateTextShadow(
     try rule.addDeclaration(generator.allocator, "text-shadow", shadow_value);
     try generator.rules.append(generator.allocator, rule);
 }
+
+/// Font style utilities (italic, not-italic)
+pub fn generateFontStyle(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
+    var rule = try generator.createRule(parsed);
+
+    const utility = parsed.utility;
+    if (std.mem.eql(u8, utility, "italic")) {
+        try rule.addDeclaration(generator.allocator, "font-style", "italic");
+    } else if (std.mem.eql(u8, utility, "not-italic")) {
+        try rule.addDeclaration(generator.allocator, "font-style", "normal");
+    } else {
+        return;
+    }
+
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Text decoration utilities (underline, line-through, no-underline, overline)
+pub fn generateTextDecoration(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
+    var rule = try generator.createRule(parsed);
+
+    const utility = parsed.utility;
+    if (std.mem.eql(u8, utility, "underline")) {
+        try rule.addDeclaration(generator.allocator, "text-decoration-line", "underline");
+    } else if (std.mem.eql(u8, utility, "overline")) {
+        try rule.addDeclaration(generator.allocator, "text-decoration-line", "overline");
+    } else if (std.mem.eql(u8, utility, "line-through")) {
+        try rule.addDeclaration(generator.allocator, "text-decoration-line", "line-through");
+    } else if (std.mem.eql(u8, utility, "no-underline")) {
+        try rule.addDeclaration(generator.allocator, "text-decoration-line", "none");
+    } else {
+        return;
+    }
+
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Text transform utilities (uppercase, lowercase, capitalize, normal-case)
+pub fn generateTextTransform(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
+    var rule = try generator.createRule(parsed);
+
+    const utility = parsed.utility;
+    if (std.mem.eql(u8, utility, "uppercase")) {
+        try rule.addDeclaration(generator.allocator, "text-transform", "uppercase");
+    } else if (std.mem.eql(u8, utility, "lowercase")) {
+        try rule.addDeclaration(generator.allocator, "text-transform", "lowercase");
+    } else if (std.mem.eql(u8, utility, "capitalize")) {
+        try rule.addDeclaration(generator.allocator, "text-transform", "capitalize");
+    } else if (std.mem.eql(u8, utility, "normal-case")) {
+        try rule.addDeclaration(generator.allocator, "text-transform", "none");
+    } else {
+        return;
+    }
+
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Text overflow utilities (truncate, text-ellipsis, text-clip)
+pub fn generateTextOverflow(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
+    var rule = try generator.createRule(parsed);
+
+    const utility = parsed.utility;
+    if (std.mem.eql(u8, utility, "truncate")) {
+        // truncate is a shorthand for overflow-hidden + text-ellipsis + whitespace-nowrap
+        try rule.addDeclaration(generator.allocator, "overflow", "hidden");
+        try rule.addDeclaration(generator.allocator, "text-overflow", "ellipsis");
+        try rule.addDeclaration(generator.allocator, "white-space", "nowrap");
+    } else if (std.mem.eql(u8, utility, "text-ellipsis")) {
+        try rule.addDeclaration(generator.allocator, "text-overflow", "ellipsis");
+    } else if (std.mem.eql(u8, utility, "text-clip")) {
+        try rule.addDeclaration(generator.allocator, "text-overflow", "clip");
+    } else {
+        return;
+    }
+
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Line height (leading) scale
+const line_heights = std.StaticStringMap([]const u8).initComptime(.{
+    .{ "none", "1" },
+    .{ "tight", "1.25" },
+    .{ "snug", "1.375" },
+    .{ "normal", "1.5" },
+    .{ "relaxed", "1.625" },
+    .{ "loose", "2" },
+    .{ "3", ".75rem" },
+    .{ "4", "1rem" },
+    .{ "5", "1.25rem" },
+    .{ "6", "1.5rem" },
+    .{ "7", "1.75rem" },
+    .{ "8", "2rem" },
+    .{ "9", "2.25rem" },
+    .{ "10", "2.5rem" },
+});
+
+/// Line height utilities (leading-*)
+pub fn generateLineHeight(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+    if (value == null) return;
+
+    const line_height = line_heights.get(value.?) orelse return;
+
+    var rule = try generator.createRule(parsed);
+    try rule.addDeclaration(generator.allocator, "line-height", line_height);
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Letter spacing (tracking) scale
+const letter_spacings = std.StaticStringMap([]const u8).initComptime(.{
+    .{ "tighter", "-0.05em" },
+    .{ "tight", "-0.025em" },
+    .{ "normal", "0em" },
+    .{ "wide", "0.025em" },
+    .{ "wider", "0.05em" },
+    .{ "widest", "0.1em" },
+});
+
+/// Letter spacing utilities (tracking-*)
+pub fn generateLetterSpacing(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+    if (value == null) return;
+
+    const letter_spacing = letter_spacings.get(value.?) orelse return;
+
+    var rule = try generator.createRule(parsed);
+    try rule.addDeclaration(generator.allocator, "letter-spacing", letter_spacing);
+    try generator.rules.append(generator.allocator, rule);
+}
