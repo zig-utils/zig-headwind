@@ -65,11 +65,12 @@ A high-performance Tailwind CSS alternative built with Zig, targeting feature pa
    - ✅ Background image gradients (already implemented via gradients.zig) - COMPLETED
 
 ### Phase B: Advanced Features (Medium Priority)
-5. **Group & Peer Variants** - Common pattern for interactive UIs
+
+5. **Group & Peer Variants** - Common pattern for interactive UIs ✅ COMPLETED
    - ✅ Implement group variant (group-hover, group-focus, etc.) - COMPLETED
-   - [ ] Named groups support (group/name)
+   - ✅ Named groups support (group/name, e.g., `group/sidebar`, `group-hover/sidebar:bg-blue`) - COMPLETED
    - ✅ Peer variant implementation - COMPLETED (peer-checked, peer-focus, etc.)
-   - [ ] Named peer support
+   - ✅ Named peer support (peer/name, e.g., `peer/checkbox`, `peer-checked/checkbox:font-bold`) - COMPLETED
 
 6. **Container Queries** - Modern CSS feature
    - ✅ container-type utilities (container-type-normal, container-type-size, container-type-inline-size) - COMPLETED

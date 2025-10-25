@@ -46,29 +46,42 @@ pub const spacing_scale = std.StaticStringMap([]const u8).initComptime(.{
 pub fn generatePadding(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
     if (value == null) return;
 
-    const spacing_value = spacing_scale.get(value.?) orelse return;
+    // Check for arbitrary value first
+    const spacing_value = if (parsed.is_arbitrary and parsed.arbitrary_value != null)
+        parsed.arbitrary_value.?
+    else
+        spacing_scale.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
 
+    // Extract utility name (before brackets if arbitrary)
     const utility = parsed.utility;
-    if (std.mem.eql(u8, utility, "p")) {
+    const utility_name = if (parsed.is_arbitrary) blk: {
+        // For "p-[20px]", extract "p"
+        if (std.mem.indexOf(u8, utility, "-[")) |idx| {
+            break :blk utility[0..idx];
+        }
+        break :blk utility;
+    } else utility;
+
+    if (std.mem.eql(u8, utility_name, "p")) {
         // All sides
         try rule.addDeclaration(generator.allocator, "padding", spacing_value);
-    } else if (std.mem.startsWith(u8, utility, "px")) {
+    } else if (std.mem.startsWith(u8, utility_name, "px")) {
         // Horizontal
         try rule.addDeclaration(generator.allocator, "padding-left", spacing_value);
         try rule.addDeclaration(generator.allocator, "padding-right", spacing_value);
-    } else if (std.mem.startsWith(u8, utility, "py")) {
+    } else if (std.mem.startsWith(u8, utility_name, "py")) {
         // Vertical
         try rule.addDeclaration(generator.allocator, "padding-top", spacing_value);
         try rule.addDeclaration(generator.allocator, "padding-bottom", spacing_value);
-    } else if (std.mem.startsWith(u8, utility, "pt")) {
+    } else if (std.mem.startsWith(u8, utility_name, "pt")) {
         try rule.addDeclaration(generator.allocator, "padding-top", spacing_value);
-    } else if (std.mem.startsWith(u8, utility, "pr")) {
+    } else if (std.mem.startsWith(u8, utility_name, "pr")) {
         try rule.addDeclaration(generator.allocator, "padding-right", spacing_value);
-    } else if (std.mem.startsWith(u8, utility, "pb")) {
+    } else if (std.mem.startsWith(u8, utility_name, "pb")) {
         try rule.addDeclaration(generator.allocator, "padding-bottom", spacing_value);
-    } else if (std.mem.startsWith(u8, utility, "pl")) {
+    } else if (std.mem.startsWith(u8, utility_name, "pl")) {
         try rule.addDeclaration(generator.allocator, "padding-left", spacing_value);
     } else {
         return;
@@ -81,26 +94,38 @@ pub fn generatePadding(generator: *CSSGenerator, parsed: *const class_parser.Par
 pub fn generateMargin(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
     if (value == null) return;
 
-    const spacing_value = spacing_scale.get(value.?) orelse return;
+    // Check for arbitrary value first
+    const spacing_value = if (parsed.is_arbitrary and parsed.arbitrary_value != null)
+        parsed.arbitrary_value.?
+    else
+        spacing_scale.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
 
+    // Extract utility name (before brackets if arbitrary)
     const utility = parsed.utility;
-    if (std.mem.eql(u8, utility, "m")) {
+    const utility_name = if (parsed.is_arbitrary) blk: {
+        if (std.mem.indexOf(u8, utility, "-[")) |idx| {
+            break :blk utility[0..idx];
+        }
+        break :blk utility;
+    } else utility;
+
+    if (std.mem.eql(u8, utility_name, "m")) {
         try rule.addDeclaration(generator.allocator, "margin", spacing_value);
-    } else if (std.mem.startsWith(u8, utility, "mx")) {
+    } else if (std.mem.startsWith(u8, utility_name, "mx")) {
         try rule.addDeclaration(generator.allocator, "margin-left", spacing_value);
         try rule.addDeclaration(generator.allocator, "margin-right", spacing_value);
-    } else if (std.mem.startsWith(u8, utility, "my")) {
+    } else if (std.mem.startsWith(u8, utility_name, "my")) {
         try rule.addDeclaration(generator.allocator, "margin-top", spacing_value);
         try rule.addDeclaration(generator.allocator, "margin-bottom", spacing_value);
-    } else if (std.mem.startsWith(u8, utility, "mt")) {
+    } else if (std.mem.startsWith(u8, utility_name, "mt")) {
         try rule.addDeclaration(generator.allocator, "margin-top", spacing_value);
-    } else if (std.mem.startsWith(u8, utility, "mr")) {
+    } else if (std.mem.startsWith(u8, utility_name, "mr")) {
         try rule.addDeclaration(generator.allocator, "margin-right", spacing_value);
-    } else if (std.mem.startsWith(u8, utility, "mb")) {
+    } else if (std.mem.startsWith(u8, utility_name, "mb")) {
         try rule.addDeclaration(generator.allocator, "margin-bottom", spacing_value);
-    } else if (std.mem.startsWith(u8, utility, "ml")) {
+    } else if (std.mem.startsWith(u8, utility_name, "ml")) {
         try rule.addDeclaration(generator.allocator, "margin-left", spacing_value);
     } else {
         return;
@@ -113,16 +138,29 @@ pub fn generateMargin(generator: *CSSGenerator, parsed: *const class_parser.Pars
 pub fn generateGap(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
     if (value == null) return;
 
-    const spacing_value = spacing_scale.get(value.?) orelse return;
+    // Check for arbitrary value first
+    const spacing_value = if (parsed.is_arbitrary and parsed.arbitrary_value != null)
+        parsed.arbitrary_value.?
+    else
+        spacing_scale.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
 
+    // Extract utility name (before brackets if arbitrary)
     const utility = parsed.utility;
-    if (std.mem.eql(u8, utility, "gap")) {
+    const utility_name = if (parsed.is_arbitrary) blk: {
+        // For "gap-[15px]", extract "gap"
+        if (std.mem.indexOf(u8, utility, "-[")) |idx| {
+            break :blk utility[0..idx];
+        }
+        break :blk utility;
+    } else utility;
+
+    if (std.mem.eql(u8, utility_name, "gap")) {
         try rule.addDeclaration(generator.allocator, "gap", spacing_value);
-    } else if (std.mem.startsWith(u8, utility, "gap-x")) {
+    } else if (std.mem.startsWith(u8, utility_name, "gap-x")) {
         try rule.addDeclaration(generator.allocator, "column-gap", spacing_value);
-    } else if (std.mem.startsWith(u8, utility, "gap-y")) {
+    } else if (std.mem.startsWith(u8, utility_name, "gap-y")) {
         try rule.addDeclaration(generator.allocator, "row-gap", spacing_value);
     } else {
         return;

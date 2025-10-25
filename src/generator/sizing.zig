@@ -42,7 +42,11 @@ fn getSizingValue(value: []const u8) ?[]const u8 {
 pub fn generateWidth(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
     if (value == null) return;
 
-    const css_value = getSizingValue(value.?) orelse return;
+    // Check for arbitrary value first
+    const css_value = if (parsed.is_arbitrary and parsed.arbitrary_value != null)
+        parsed.arbitrary_value.?
+    else
+        getSizingValue(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
     try rule.addDeclaration(generator.allocator, "width", css_value);
@@ -53,7 +57,11 @@ pub fn generateWidth(generator: *CSSGenerator, parsed: *const class_parser.Parse
 pub fn generateHeight(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
     if (value == null) return;
 
-    const css_value = getSizingValue(value.?) orelse return;
+    // Check for arbitrary value first
+    const css_value = if (parsed.is_arbitrary and parsed.arbitrary_value != null)
+        parsed.arbitrary_value.?
+    else
+        getSizingValue(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
     try rule.addDeclaration(generator.allocator, "height", css_value);
@@ -64,7 +72,11 @@ pub fn generateHeight(generator: *CSSGenerator, parsed: *const class_parser.Pars
 pub fn generateMinWidth(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
     if (value == null) return;
 
-    const css_value = getSizingValue(value.?) orelse return;
+    // Check for arbitrary value first
+    const css_value = if (parsed.is_arbitrary and parsed.arbitrary_value != null)
+        parsed.arbitrary_value.?
+    else
+        getSizingValue(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
     try rule.addDeclaration(generator.allocator, "min-width", css_value);
@@ -75,7 +87,11 @@ pub fn generateMinWidth(generator: *CSSGenerator, parsed: *const class_parser.Pa
 pub fn generateMaxWidth(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
     if (value == null) return;
 
-    const css_value = getSizingValue(value.?) orelse return;
+    // Check for arbitrary value first
+    const css_value = if (parsed.is_arbitrary and parsed.arbitrary_value != null)
+        parsed.arbitrary_value.?
+    else
+        getSizingValue(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
     try rule.addDeclaration(generator.allocator, "max-width", css_value);

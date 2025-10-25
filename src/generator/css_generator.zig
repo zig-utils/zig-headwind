@@ -112,6 +112,28 @@ pub const CSSRule = struct {
     }
 };
 
+/// Helper function to check if a value looks like a color
+/// Returns true for color names with shades (e.g., "blue-500") or single color names (e.g., "white")
+fn isColorValue(value: []const u8) bool {
+    // Check for color-shade pattern (e.g., "blue-500")
+    if (std.mem.indexOf(u8, value, "-")) |_| {
+        // Has a dash, likely a color with shade
+        const colors = @import("colors.zig").colors;
+        var i: usize = value.len;
+        while (i > 0) {
+            i -= 1;
+            if (value[i] == '-') {
+                const color_part = value[0..i];
+                return colors.has(color_part);
+            }
+        }
+        return false;
+    }
+    // Check for single color names (white, black)
+    const colors = @import("colors.zig").colors;
+    return colors.has(value);
+}
+
 /// CSS Generator for utility classes
 pub const CSSGenerator = struct {
     allocator: std.mem.Allocator,
@@ -238,7 +260,11 @@ pub const CSSGenerator = struct {
                     // text-color-mix-[in_srgb,_blue_50%,_red]
                     const mix_value = val[10..]; // Skip "color-mix-"
                     try self.generateColorMixText(parsed, mix_value);
+                } else if (parsed.is_arbitrary or isColorValue(val)) {
+                    // text-[rgb(255,0,0)] or text-blue-500
+                    try self.generateTextColor(parsed, utility_parts.value);
                 } else {
+                    // text-sm, text-left, etc.
                     try self.generateText(parsed, utility_parts.value);
                 }
             } else {
@@ -290,7 +316,18 @@ pub const CSSGenerator = struct {
                 try self.generateBackground(parsed, utility_parts.value);
             }
         } else if (std.mem.startsWith(u8, utility_name, "border")) {
-            try self.generateBorder(parsed, utility_parts.value);
+            // Check if it's a border color
+            if (utility_parts.value) |val| {
+                if (parsed.is_arbitrary or isColorValue(val)) {
+                    // border-[#00ff00] or border-blue-500
+                    try self.generateBorderColor(parsed, utility_parts.value);
+                } else {
+                    // border-2, border-t, etc. (width)
+                    try self.generateBorder(parsed, utility_parts.value);
+                }
+            } else {
+                try self.generateBorder(parsed, utility_parts.value);
+            }
         } else if (std.mem.startsWith(u8, utility_name, "rounded")) {
             try self.generateBorderRadius(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "from")) {
@@ -806,6 +843,14 @@ pub const CSSGenerator = struct {
 
     fn generateBackground(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
         return colors.generateBackground(self, parsed, value);
+    }
+
+    fn generateTextColor(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return colors.generateTextColor(self, parsed, value);
+    }
+
+    fn generateBorderColor(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return colors.generateBorderColor(self, parsed, value);
     }
 
     // Background utilities

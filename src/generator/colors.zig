@@ -114,8 +114,13 @@ pub fn parseColorShade(value: []const u8) ?struct { color: []const u8, shade: []
 pub fn generateBackground(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
     if (value == null) return;
 
-    const color_info = parseColorShade(value.?) orelse return;
-    const color_value = getColorValue(color_info.color, color_info.shade) orelse return;
+    // Check for arbitrary value first
+    const color_value = if (parsed.is_arbitrary and parsed.arbitrary_value != null) blk: {
+        break :blk parsed.arbitrary_value.?;
+    } else blk: {
+        const color_info = parseColorShade(value.?) orelse return;
+        break :blk getColorValue(color_info.color, color_info.shade) orelse return;
+    };
 
     var rule = try generator.createRule(parsed);
     try rule.addDeclaration(generator.allocator, "background-color", color_value);
@@ -126,8 +131,13 @@ pub fn generateBackground(generator: *CSSGenerator, parsed: *const class_parser.
 pub fn generateTextColor(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
     if (value == null) return;
 
-    const color_info = parseColorShade(value.?) orelse return;
-    const color_value = getColorValue(color_info.color, color_info.shade) orelse return;
+    // Check for arbitrary value first
+    const color_value = if (parsed.is_arbitrary and parsed.arbitrary_value != null) blk: {
+        break :blk parsed.arbitrary_value.?;
+    } else blk: {
+        const color_info = parseColorShade(value.?) orelse return;
+        break :blk getColorValue(color_info.color, color_info.shade) orelse return;
+    };
 
     var rule = try generator.createRule(parsed);
     try rule.addDeclaration(generator.allocator, "color", color_value);
@@ -138,8 +148,13 @@ pub fn generateTextColor(generator: *CSSGenerator, parsed: *const class_parser.P
 pub fn generateBorderColor(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
     if (value == null) return;
 
-    const color_info = parseColorShade(value.?) orelse return;
-    const color_value = getColorValue(color_info.color, color_info.shade) orelse return;
+    // Check for arbitrary value first
+    const color_value = if (parsed.is_arbitrary and parsed.arbitrary_value != null) blk: {
+        break :blk parsed.arbitrary_value.?;
+    } else blk: {
+        const color_info = parseColorShade(value.?) orelse return;
+        break :blk getColorValue(color_info.color, color_info.shade) orelse return;
+    };
 
     var rule = try generator.createRule(parsed);
     try rule.addDeclaration(generator.allocator, "border-color", color_value);
