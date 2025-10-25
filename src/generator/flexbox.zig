@@ -14,9 +14,10 @@ pub fn generateFlexDirection(generator: *CSSGenerator, parsed: *const class_pars
 
     const direction_value = flex_direction_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "flex-direction", .value = direction_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "flex-direction", direction_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Flex wrap utilities
@@ -29,9 +30,10 @@ pub fn generateFlexWrap(generator: *CSSGenerator, parsed: *const class_parser.Pa
 
     const wrap_value = flex_wrap_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "flex-wrap", .value = wrap_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "flex-wrap", wrap_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Flex utilities (flex-grow, flex-shrink, flex-basis combined)
@@ -47,9 +49,10 @@ pub fn generateFlex(generator: *CSSGenerator, parsed: *const class_parser.Parsed
 
     const flex_value = flex_map.get(value.?) orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "flex", .value = flex_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "flex", flex_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Flex grow utilities
@@ -61,9 +64,10 @@ pub fn generateFlexGrow(generator: *CSSGenerator, parsed: *const class_parser.Pa
 
     const grow_value = flex_grow_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "flex-grow", .value = grow_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "flex-grow", grow_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Flex shrink utilities
@@ -75,9 +79,10 @@ pub fn generateFlexShrink(generator: *CSSGenerator, parsed: *const class_parser.
 
     const shrink_value = flex_shrink_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "flex-shrink", .value = shrink_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "flex-shrink", shrink_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Flex basis utilities
@@ -130,9 +135,10 @@ pub fn generateFlexBasis(generator: *CSSGenerator, parsed: *const class_parser.P
 
     const basis_value = flex_basis_map.get(value.?) orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "flex-basis", .value = basis_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "flex-basis", basis_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Justify content utilities
@@ -150,9 +156,10 @@ pub fn generateJustifyContent(generator: *CSSGenerator, parsed: *const class_par
 
     const justify_value = justify_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "justify-content", .value = justify_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "justify-content", justify_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Justify items utilities
@@ -166,9 +173,10 @@ pub fn generateJustifyItems(generator: *CSSGenerator, parsed: *const class_parse
 
     const justify_value = justify_items_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "justify-items", .value = justify_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "justify-items", justify_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Justify self utilities
@@ -183,9 +191,10 @@ pub fn generateJustifySelf(generator: *CSSGenerator, parsed: *const class_parser
 
     const justify_value = justify_self_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "justify-self", .value = justify_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "justify-self", justify_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Align content utilities
@@ -204,9 +213,10 @@ pub fn generateAlignContent(generator: *CSSGenerator, parsed: *const class_parse
 
     const align_value = align_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "align-content", .value = align_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "align-content", align_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Align items utilities
@@ -221,9 +231,10 @@ pub fn generateAlignItems(generator: *CSSGenerator, parsed: *const class_parser.
 
     const align_value = align_items_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "align-items", .value = align_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "align-items", align_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Align self utilities
@@ -239,9 +250,10 @@ pub fn generateAlignSelf(generator: *CSSGenerator, parsed: *const class_parser.P
 
     const align_value = align_self_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "align-self", .value = align_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "align-self", align_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Place content utilities
@@ -259,9 +271,10 @@ pub fn generatePlaceContent(generator: *CSSGenerator, parsed: *const class_parse
 
     const place_value = place_content_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "place-content", .value = place_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "place-content", place_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Place items utilities
@@ -276,9 +289,10 @@ pub fn generatePlaceItems(generator: *CSSGenerator, parsed: *const class_parser.
 
     const place_value = place_items_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "place-items", .value = place_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "place-items", place_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Place self utilities
@@ -293,9 +307,10 @@ pub fn generatePlaceSelf(generator: *CSSGenerator, parsed: *const class_parser.P
 
     const place_value = place_self_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "place-self", .value = place_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "place-self", place_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Order utilities
@@ -322,7 +337,8 @@ pub fn generateOrder(generator: *CSSGenerator, parsed: *const class_parser.Parse
 
     const order_value = order_map.get(value.?) orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "order", .value = order_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "order", order_value);
+    try generator.rules.append(generator.allocator, rule);
 }

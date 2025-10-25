@@ -210,16 +210,83 @@ pub const CSSGenerator = struct {
         }
 
         // Dispatch to appropriate utility generator
-        if (std.mem.eql(u8, utility_name, "flex")) {
+        // Check flex-* patterns BEFORE plain "flex"
+        if (std.mem.eql(u8, utility_name, "flex") and utility_parts.value != null) {
+            // This is flex-row, flex-col, flex-1, etc.
+            const val = utility_parts.value.?;
+            if (std.mem.eql(u8, val, "row") or std.mem.eql(u8, val, "row-reverse") or
+                std.mem.eql(u8, val, "col") or std.mem.eql(u8, val, "col-reverse")) {
+                try self.generateFlexDirection(parsed, val);
+            } else if (std.mem.eql(u8, val, "wrap") or std.mem.eql(u8, val, "wrap-reverse") or
+                       std.mem.eql(u8, val, "nowrap")) {
+                try self.generateFlexWrap(parsed, val);
+            } else if (std.mem.eql(u8, val, "1") or std.mem.eql(u8, val, "auto") or
+                       std.mem.eql(u8, val, "initial") or std.mem.eql(u8, val, "none")) {
+                try self.generateFlexValue(parsed, val);
+            } else if (std.mem.startsWith(u8, val, "grow")) {
+                try self.generateFlexGrowValue(parsed, if (std.mem.eql(u8, val, "grow")) null else val[5..]); // "grow" or "grow-0" -> null or "0"
+            } else if (std.mem.startsWith(u8, val, "shrink")) {
+                try self.generateFlexShrinkValue(parsed, if (std.mem.eql(u8, val, "shrink")) null else val[7..]); // "shrink" or "shrink-0" -> null or "0"
+            } else if (std.mem.startsWith(u8, val, "basis")) {
+                try self.generateFlexBasisValue(parsed, val[6..]); // "basis-0", "basis-1/2" -> "0", "1/2"
+            }
+        } else if (std.mem.eql(u8, utility_name, "flex")) {
+            // Plain "flex" with no value
             try self.generateFlex(parsed);
+        } else if (std.mem.eql(u8, utility_name, "grow")) {
+            try self.generateGrowValue(parsed, utility_parts.value);
+        } else if (std.mem.eql(u8, utility_name, "shrink")) {
+            try self.generateShrinkValue(parsed, utility_parts.value);
         } else if (std.mem.eql(u8, utility_name, "block")) {
             try self.generateDisplay(parsed, "block");
         } else if (std.mem.eql(u8, utility_name, "inline")) {
             try self.generateDisplay(parsed, "inline");
         } else if (std.mem.eql(u8, utility_name, "hidden")) {
             try self.generateDisplay(parsed, "none");
+        } else if (std.mem.eql(u8, utility_name, "grid") and utility_parts.value != null) {
+            // This is grid-cols-*, grid-rows-*, grid-flow-*
+            const val = utility_parts.value.?;
+            if (std.mem.startsWith(u8, val, "cols-")) {
+                try self.generateGridTemplateColumnsValue(parsed, val[5..]); // "cols-3" -> "3"
+            } else if (std.mem.startsWith(u8, val, "rows-")) {
+                try self.generateGridTemplateRowsValue(parsed, val[5..]); // "rows-2" -> "2"
+            } else if (std.mem.startsWith(u8, val, "flow-")) {
+                try self.generateGridAutoFlowValue(parsed, val[5..]); // "flow-row" -> "row"
+            }
         } else if (std.mem.eql(u8, utility_name, "grid")) {
+            // Plain "grid" with no value
             try self.generateDisplay(parsed, "grid");
+        } else if (std.mem.eql(u8, utility_name, "col") and utility_parts.value != null) {
+            // col-span-*, col-start-*, col-end-*, col-auto
+            const val = utility_parts.value.?;
+            if (std.mem.startsWith(u8, val, "span-")) {
+                try self.generateGridColumnValue(parsed, "span", val[5..]); // "span-2" -> "2"
+            } else if (std.mem.startsWith(u8, val, "start-")) {
+                try self.generateGridColumnValue(parsed, "start", val[6..]); // "start-1" -> "1"
+            } else if (std.mem.startsWith(u8, val, "end-")) {
+                try self.generateGridColumnValue(parsed, "end", val[4..]); // "end-3" -> "3"
+            } else if (std.mem.eql(u8, val, "auto")) {
+                try self.generateGridColumnValue(parsed, "auto", null);
+            }
+        } else if (std.mem.eql(u8, utility_name, "row") and utility_parts.value != null) {
+            // row-span-*, row-start-*, row-end-*, row-auto
+            const val = utility_parts.value.?;
+            if (std.mem.startsWith(u8, val, "span-")) {
+                try self.generateGridRowValue(parsed, "span", val[5..]); // "span-2" -> "2"
+            } else if (std.mem.startsWith(u8, val, "start-")) {
+                try self.generateGridRowValue(parsed, "start", val[6..]); // "start-1" -> "1"
+            } else if (std.mem.startsWith(u8, val, "end-")) {
+                try self.generateGridRowValue(parsed, "end", val[4..]); // "end-3" -> "3"
+            } else if (std.mem.eql(u8, val, "auto")) {
+                try self.generateGridRowValue(parsed, "auto", null);
+            }
+        } else if (std.mem.eql(u8, utility_name, "auto") and utility_parts.value != null) {
+            const val = utility_parts.value.?;
+            if (std.mem.startsWith(u8, val, "cols-")) {
+                try self.generateGridAutoColumnsValue(parsed, val[5..]); // "cols-auto" -> "auto"
+            } else if (std.mem.startsWith(u8, val, "rows-")) {
+                try self.generateGridAutoRowsValue(parsed, val[5..]); // "rows-auto" -> "auto"
+            }
         } else if (std.mem.startsWith(u8, utility_name, "table")) {
             // table, table-auto, table-fixed
             if (std.mem.eql(u8, utility_name, "table-auto") or std.mem.eql(u8, utility_name, "table-fixed")) {
@@ -269,9 +336,38 @@ pub const CSSGenerator = struct {
             // object-center, object-top, etc. (object-position)
             try self.generateObjectPosition(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "items")) {
-            try self.generateAlignItems(parsed, utility_parts.value);
+            try self.generateAlignItemsValue(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "justify")) {
-            try self.generateJustifyContent(parsed, utility_parts.value);
+            // justify-content, justify-items, justify-self
+            if (utility_parts.value) |val| {
+                if (std.mem.startsWith(u8, utility_name, "justify-items")) {
+                    try self.generateJustifyItemsValue(parsed, val);
+                } else if (std.mem.startsWith(u8, utility_name, "justify-self")) {
+                    try self.generateJustifySelfValue(parsed, val);
+                } else {
+                    // justify-start, justify-center, etc. -> justify-content
+                    try self.generateJustifyContentValue(parsed, val);
+                }
+            }
+        } else if (std.mem.startsWith(u8, utility_name, "content-")) {
+            // content-start, content-center, etc. -> align-content
+            try self.generateAlignContentValue(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "self-")) {
+            // self-auto, self-start, self-center, etc. -> align-self
+            try self.generateAlignSelfValue(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "place-")) {
+            // place-content, place-items, place-self
+            if (utility_parts.value) |val| {
+                if (std.mem.startsWith(u8, utility_name, "place-content")) {
+                    try self.generatePlaceContentValue(parsed, val);
+                } else if (std.mem.startsWith(u8, utility_name, "place-items")) {
+                    try self.generatePlaceItemsValue(parsed, val);
+                } else if (std.mem.startsWith(u8, utility_name, "place-self")) {
+                    try self.generatePlaceSelfValue(parsed, val);
+                }
+            }
+        } else if (std.mem.startsWith(u8, utility_name, "order-")) {
+            try self.generateOrderValue(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "p")) {
             try self.generatePadding(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "m")) {
@@ -362,14 +458,18 @@ pub const CSSGenerator = struct {
                     try self.generateWordBreak(parsed);
                 }
             }
-        } else if (std.mem.startsWith(u8, utility_name, "mix-blend")) {
-            try self.generateMixBlend(parsed, utility_parts.value);
-        } else if (std.mem.startsWith(u8, utility_name, "bg-blend")) {
-            try self.generateBgBlend(parsed, utility_parts.value);
+        } else if (std.mem.eql(u8, utility_name, "mix") and utility_parts.value != null and std.mem.startsWith(u8, utility_parts.value.?, "blend-")) {
+            // mix-blend-multiply -> name="mix", value="blend-multiply"
+            const blend_mode = utility_parts.value.?[6..]; // Skip "blend-"
+            try self.generateMixBlend(parsed, blend_mode);
         } else if (std.mem.startsWith(u8, utility_name, "bg")) {
             // Check for special background utilities
             if (utility_parts.value) |val| {
-                if (std.mem.startsWith(u8, val, "gradient")) {
+                if (std.mem.startsWith(u8, val, "blend-")) {
+                    // bg-blend-multiply -> name="bg", value="blend-multiply"
+                    const blend_mode = val[6..]; // Skip "blend-"
+                    try self.generateBgBlend(parsed, blend_mode);
+                } else if (std.mem.startsWith(u8, val, "gradient")) {
                     // bg-gradient-to-r -> extract "to-r"
                     const gradient_part = val[9..]; // Skip "gradient-"
                     try self.generateBackgroundGradient(parsed, gradient_part);
@@ -943,6 +1043,8 @@ pub const CSSGenerator = struct {
     const tables = @import("tables.zig");
     const lists = @import("lists.zig");
     const layout = @import("layout.zig");
+    const flexbox = @import("flexbox.zig");
+    const grid = @import("grid.zig");
 
     fn generatePadding(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
         return spacing.generatePadding(self, parsed, value);
@@ -1382,6 +1484,108 @@ pub const CSSGenerator = struct {
 
     fn generateBreakInside(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
         return layout.generateBreak(self, parsed, "inside", value);
+    }
+
+    // Flexbox wrapper functions
+    fn generateFlexDirection(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return flexbox.generateFlexDirection(self, parsed, value);
+    }
+
+    fn generateFlexWrap(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return flexbox.generateFlexWrap(self, parsed, value);
+    }
+
+    fn generateFlexValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return flexbox.generateFlex(self, parsed, value);
+    }
+
+    fn generateFlexGrowValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return flexbox.generateFlexGrow(self, parsed, value);
+    }
+
+    fn generateFlexShrinkValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return flexbox.generateFlexShrink(self, parsed, value);
+    }
+
+    fn generateFlexBasisValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return flexbox.generateFlexBasis(self, parsed, value);
+    }
+
+    fn generateGrowValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return flexbox.generateFlexGrow(self, parsed, value);
+    }
+
+    fn generateShrinkValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return flexbox.generateFlexShrink(self, parsed, value);
+    }
+
+    fn generateJustifyContentValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return flexbox.generateJustifyContent(self, parsed, value);
+    }
+
+    fn generateJustifyItemsValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return flexbox.generateJustifyItems(self, parsed, value);
+    }
+
+    fn generateJustifySelfValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return flexbox.generateJustifySelf(self, parsed, value);
+    }
+
+    fn generateAlignContentValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return flexbox.generateAlignContent(self, parsed, value);
+    }
+
+    fn generateAlignItemsValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return flexbox.generateAlignItems(self, parsed, value);
+    }
+
+    fn generateAlignSelfValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return flexbox.generateAlignSelf(self, parsed, value);
+    }
+
+    fn generatePlaceContentValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return flexbox.generatePlaceContent(self, parsed, value);
+    }
+
+    fn generatePlaceItemsValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return flexbox.generatePlaceItems(self, parsed, value);
+    }
+
+    fn generatePlaceSelfValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return flexbox.generatePlaceSelf(self, parsed, value);
+    }
+
+    fn generateOrderValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return flexbox.generateOrder(self, parsed, value);
+    }
+
+    // Grid wrapper functions
+    fn generateGridTemplateColumnsValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return grid.generateGridTemplateColumns(self, parsed, value);
+    }
+
+    fn generateGridTemplateRowsValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return grid.generateGridTemplateRows(self, parsed, value);
+    }
+
+    fn generateGridColumnValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, property_type: []const u8, value: ?[]const u8) !void {
+        return grid.generateGridColumn(self, parsed, property_type, value);
+    }
+
+    fn generateGridRowValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, property_type: []const u8, value: ?[]const u8) !void {
+        return grid.generateGridRow(self, parsed, property_type, value);
+    }
+
+    fn generateGridAutoFlowValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return grid.generateGridAutoFlow(self, parsed, value);
+    }
+
+    fn generateGridAutoColumnsValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return grid.generateGridAutoColumns(self, parsed, value);
+    }
+
+    fn generateGridAutoRowsValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return grid.generateGridAutoRows(self, parsed, value);
     }
 
     // Dispatchers for complex utility types

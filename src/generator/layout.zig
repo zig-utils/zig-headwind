@@ -106,29 +106,26 @@ pub fn generateInset(generator: *CSSGenerator, parsed: *const class_parser.Parse
 
     const inset_value = spacing_scale.get(value.?) orelse return;
 
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+
     if (std.mem.eql(u8, side, "all")) {
         // inset-* applies to all sides
-        try generator.addUtility(parsed, &[_]Declaration{
-            .{ .property = "inset", .value = inset_value },
-        });
+        try rule.addDeclaration(generator.allocator, "inset", inset_value);
     } else if (std.mem.eql(u8, side, "x")) {
         // inset-x-* applies to left and right
-        try generator.addUtility(parsed, &[_]Declaration{
-            .{ .property = "left", .value = inset_value },
-            .{ .property = "right", .value = inset_value },
-        });
+        try rule.addDeclaration(generator.allocator, "left", inset_value);
+        try rule.addDeclaration(generator.allocator, "right", inset_value);
     } else if (std.mem.eql(u8, side, "y")) {
         // inset-y-* applies to top and bottom
-        try generator.addUtility(parsed, &[_]Declaration{
-            .{ .property = "top", .value = inset_value },
-            .{ .property = "bottom", .value = inset_value },
-        });
+        try rule.addDeclaration(generator.allocator, "top", inset_value);
+        try rule.addDeclaration(generator.allocator, "bottom", inset_value);
     } else {
         // Individual sides
-        try generator.addUtility(parsed, &[_]Declaration{
-            .{ .property = side, .value = inset_value },
-        });
+        try rule.addDeclaration(generator.allocator, side, inset_value);
     }
+
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Z-index utilities
@@ -147,9 +144,10 @@ pub fn generateZIndex(generator: *CSSGenerator, parsed: *const class_parser.Pars
 
     const z_value = z_index_map.get(value.?) orelse return;
 
-    try generator.addUtility(parsed, &[_]Declaration{
-        .{ .property = "z-index", .value = z_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "z-index", z_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Overflow utilities
@@ -166,21 +164,20 @@ pub fn generateOverflow(generator: *CSSGenerator, parsed: *const class_parser.Pa
 
     const overflow_value = overflow_map.get(value.?) orelse return;
 
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+
     if (axis) |ax| {
         if (std.mem.eql(u8, ax, "x")) {
-            try generator.addUtility(parsed, &[_]Declaration{
-                .{ .property = "overflow-x", .value = overflow_value },
-            });
+            try rule.addDeclaration(generator.allocator, "overflow-x", overflow_value);
         } else if (std.mem.eql(u8, ax, "y")) {
-            try generator.addUtility(parsed, &[_]Declaration{
-                .{ .property = "overflow-y", .value = overflow_value },
-            });
+            try rule.addDeclaration(generator.allocator, "overflow-y", overflow_value);
         }
     } else {
-        try generator.addUtility(parsed, &[_]Declaration{
-            .{ .property = "overflow", .value = overflow_value },
-        });
+        try rule.addDeclaration(generator.allocator, "overflow", overflow_value);
     }
+
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Overscroll behavior utilities
@@ -195,21 +192,20 @@ pub fn generateOverscrollBehavior(generator: *CSSGenerator, parsed: *const class
 
     const overscroll_value = overscroll_map.get(value.?) orelse return;
 
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+
     if (axis) |ax| {
         if (std.mem.eql(u8, ax, "x")) {
-            try generator.addUtility(parsed, &[_]Declaration{
-                .{ .property = "overscroll-behavior-x", .value = overscroll_value },
-            });
+            try rule.addDeclaration(generator.allocator, "overscroll-behavior-x", overscroll_value);
         } else if (std.mem.eql(u8, ax, "y")) {
-            try generator.addUtility(parsed, &[_]Declaration{
-                .{ .property = "overscroll-behavior-y", .value = overscroll_value },
-            });
+            try rule.addDeclaration(generator.allocator, "overscroll-behavior-y", overscroll_value);
         }
     } else {
-        try generator.addUtility(parsed, &[_]Declaration{
-            .{ .property = "overscroll-behavior", .value = overscroll_value },
-        });
+        try rule.addDeclaration(generator.allocator, "overscroll-behavior", overscroll_value);
     }
+
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Visibility utilities
@@ -222,9 +218,10 @@ pub fn generateVisibility(generator: *CSSGenerator, parsed: *const class_parser.
 
     const visibility_value = visibility_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]Declaration{
-        .{ .property = "visibility", .value = visibility_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "visibility", visibility_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Isolation utilities
@@ -236,9 +233,10 @@ pub fn generateIsolation(generator: *CSSGenerator, parsed: *const class_parser.P
 
     const isolation_value = isolation_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]Declaration{
-        .{ .property = "isolation", .value = isolation_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "isolation", isolation_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Float utilities
@@ -253,9 +251,10 @@ pub fn generateFloat(generator: *CSSGenerator, parsed: *const class_parser.Parse
 
     const float_value = float_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]Declaration{
-        .{ .property = "float", .value = float_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "float", float_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Clear utilities
@@ -271,9 +270,10 @@ pub fn generateClear(generator: *CSSGenerator, parsed: *const class_parser.Parse
 
     const clear_value = clear_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]Declaration{
-        .{ .property = "clear", .value = clear_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "clear", clear_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Object-fit utilities
@@ -288,9 +288,10 @@ pub fn generateObjectFit(generator: *CSSGenerator, parsed: *const class_parser.P
 
     const object_fit_value = object_fit_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]Declaration{
-        .{ .property = "object-fit", .value = object_fit_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "object-fit", object_fit_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Object-position utilities
@@ -309,9 +310,10 @@ pub fn generateObjectPosition(generator: *CSSGenerator, parsed: *const class_par
 
     const object_position_value = object_position_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]Declaration{
-        .{ .property = "object-position", .value = object_position_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "object-position", object_position_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Aspect ratio utilities
@@ -326,16 +328,18 @@ pub fn generateAspectRatio(generator: *CSSGenerator, parsed: *const class_parser
 
     const aspect_value = aspect_map.get(value.?) orelse return;
 
-    try generator.addUtility(parsed, &[_]Declaration{
-        .{ .property = "aspect-ratio", .value = aspect_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "aspect-ratio", aspect_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Container utilities
 pub fn generateContainer(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
-    try generator.addUtility(parsed, &[_]Declaration{
-        .{ .property = "width", .value = "100%" },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "width", "100%");
+    try generator.rules.append(generator.allocator, rule);
     // TODO: Add breakpoint-specific max-widths using media queries
 }
 
@@ -348,10 +352,11 @@ pub fn generateBoxDecorationBreak(generator: *CSSGenerator, parsed: *const class
 
     const box_decoration_value = box_decoration_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]Declaration{
-        .{ .property = "box-decoration-break", .value = box_decoration_value },
-        .{ .property = "-webkit-box-decoration-break", .value = box_decoration_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "box-decoration-break", box_decoration_value);
+    try rule.addDeclaration(generator.allocator, "-webkit-box-decoration-break", box_decoration_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Box sizing utilities
@@ -363,9 +368,10 @@ pub fn generateBoxSizing(generator: *CSSGenerator, parsed: *const class_parser.P
 
     const box_sizing_value = box_sizing_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]Declaration{
-        .{ .property = "box-sizing", .value = box_sizing_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "box-sizing", box_sizing_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Columns utilities
@@ -403,9 +409,10 @@ pub fn generateColumns(generator: *CSSGenerator, parsed: *const class_parser.Par
 
     const columns_value = columns_map.get(value.?) orelse return;
 
-    try generator.addUtility(parsed, &[_]Declaration{
-        .{ .property = "columns", .value = columns_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "columns", columns_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Break utilities (break-before, break-after, break-inside)
@@ -428,7 +435,8 @@ pub fn generateBreak(generator: *CSSGenerator, parsed: *const class_parser.Parse
     const property = try std.fmt.allocPrint(generator.allocator, "break-{s}", .{position});
     defer generator.allocator.free(property);
 
-    try generator.addUtility(parsed, &[_]Declaration{
-        .{ .property = property, .value = break_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, property, break_value);
+    try generator.rules.append(generator.allocator, rule);
 }

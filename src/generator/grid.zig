@@ -26,9 +26,10 @@ pub fn generateGridTemplateColumns(generator: *CSSGenerator, parsed: *const clas
 
     const grid_value = grid_cols_map.get(value.?) orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "grid-template-columns", .value = grid_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "grid-template-columns", grid_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Grid column utilities (span, start, end)
@@ -38,16 +39,18 @@ pub fn generateGridColumn(generator: *CSSGenerator, parsed: *const class_parser.
     if (std.mem.eql(u8, property_type, "span")) {
         // col-span-*
         if (std.mem.eql(u8, value.?, "auto")) {
-            try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-                .{ .property = "grid-column", .value = "auto" },
-            });
+            var rule = try generator.createRule(parsed);
+            errdefer rule.deinit(generator.allocator);
+            try rule.addDeclaration(generator.allocator, "grid-column", "auto");
+            try generator.rules.append(generator.allocator, rule);
             return;
         }
 
         if (std.mem.eql(u8, value.?, "full")) {
-            try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-                .{ .property = "grid-column", .value = "1 / -1" },
-            });
+            var rule = try generator.createRule(parsed);
+            errdefer rule.deinit(generator.allocator);
+            try rule.addDeclaration(generator.allocator, "grid-column", "1 / -1");
+            try generator.rules.append(generator.allocator, rule);
             return;
         }
 
@@ -55,33 +58,38 @@ pub fn generateGridColumn(generator: *CSSGenerator, parsed: *const class_parser.
         const span_value = try std.fmt.allocPrint(generator.allocator, "span {s} / span {s}", .{ value.?, value.? });
         defer generator.allocator.free(span_value);
 
-        try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-            .{ .property = "grid-column", .value = span_value },
-        });
+        var rule = try generator.createRule(parsed);
+        errdefer rule.deinit(generator.allocator);
+        try rule.addDeclaration(generator.allocator, "grid-column", span_value);
+        try generator.rules.append(generator.allocator, rule);
     } else if (std.mem.eql(u8, property_type, "start")) {
         // col-start-*
         if (std.mem.eql(u8, value.?, "auto")) {
-            try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-                .{ .property = "grid-column-start", .value = "auto" },
-            });
+            var rule = try generator.createRule(parsed);
+            errdefer rule.deinit(generator.allocator);
+            try rule.addDeclaration(generator.allocator, "grid-column-start", "auto");
+            try generator.rules.append(generator.allocator, rule);
             return;
         }
 
-        try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-            .{ .property = "grid-column-start", .value = value.? },
-        });
+        var rule = try generator.createRule(parsed);
+        errdefer rule.deinit(generator.allocator);
+        try rule.addDeclaration(generator.allocator, "grid-column-start", value.?);
+        try generator.rules.append(generator.allocator, rule);
     } else if (std.mem.eql(u8, property_type, "end")) {
         // col-end-*
         if (std.mem.eql(u8, value.?, "auto")) {
-            try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-                .{ .property = "grid-column-end", .value = "auto" },
-            });
+            var rule = try generator.createRule(parsed);
+            errdefer rule.deinit(generator.allocator);
+            try rule.addDeclaration(generator.allocator, "grid-column-end", "auto");
+            try generator.rules.append(generator.allocator, rule);
             return;
         }
 
-        try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-            .{ .property = "grid-column-end", .value = value.? },
-        });
+        var rule = try generator.createRule(parsed);
+        errdefer rule.deinit(generator.allocator);
+        try rule.addDeclaration(generator.allocator, "grid-column-end", value.?);
+        try generator.rules.append(generator.allocator, rule);
     }
 }
 
@@ -108,9 +116,10 @@ pub fn generateGridTemplateRows(generator: *CSSGenerator, parsed: *const class_p
 
     const grid_value = grid_rows_map.get(value.?) orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "grid-template-rows", .value = grid_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "grid-template-rows", grid_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Grid row utilities (span, start, end)
@@ -120,16 +129,18 @@ pub fn generateGridRow(generator: *CSSGenerator, parsed: *const class_parser.Par
     if (std.mem.eql(u8, property_type, "span")) {
         // row-span-*
         if (std.mem.eql(u8, value.?, "auto")) {
-            try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-                .{ .property = "grid-row", .value = "auto" },
-            });
+            var rule = try generator.createRule(parsed);
+            errdefer rule.deinit(generator.allocator);
+            try rule.addDeclaration(generator.allocator, "grid-row", "auto");
+            try generator.rules.append(generator.allocator, rule);
             return;
         }
 
         if (std.mem.eql(u8, value.?, "full")) {
-            try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-                .{ .property = "grid-row", .value = "1 / -1" },
-            });
+            var rule = try generator.createRule(parsed);
+            errdefer rule.deinit(generator.allocator);
+            try rule.addDeclaration(generator.allocator, "grid-row", "1 / -1");
+            try generator.rules.append(generator.allocator, rule);
             return;
         }
 
@@ -137,33 +148,38 @@ pub fn generateGridRow(generator: *CSSGenerator, parsed: *const class_parser.Par
         const span_value = try std.fmt.allocPrint(generator.allocator, "span {s} / span {s}", .{ value.?, value.? });
         defer generator.allocator.free(span_value);
 
-        try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-            .{ .property = "grid-row", .value = span_value },
-        });
+        var rule = try generator.createRule(parsed);
+        errdefer rule.deinit(generator.allocator);
+        try rule.addDeclaration(generator.allocator, "grid-row", span_value);
+        try generator.rules.append(generator.allocator, rule);
     } else if (std.mem.eql(u8, property_type, "start")) {
         // row-start-*
         if (std.mem.eql(u8, value.?, "auto")) {
-            try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-                .{ .property = "grid-row-start", .value = "auto" },
-            });
+            var rule = try generator.createRule(parsed);
+            errdefer rule.deinit(generator.allocator);
+            try rule.addDeclaration(generator.allocator, "grid-row-start", "auto");
+            try generator.rules.append(generator.allocator, rule);
             return;
         }
 
-        try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-            .{ .property = "grid-row-start", .value = value.? },
-        });
+        var rule = try generator.createRule(parsed);
+        errdefer rule.deinit(generator.allocator);
+        try rule.addDeclaration(generator.allocator, "grid-row-start", value.?);
+        try generator.rules.append(generator.allocator, rule);
     } else if (std.mem.eql(u8, property_type, "end")) {
         // row-end-*
         if (std.mem.eql(u8, value.?, "auto")) {
-            try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-                .{ .property = "grid-row-end", .value = "auto" },
-            });
+            var rule = try generator.createRule(parsed);
+            errdefer rule.deinit(generator.allocator);
+            try rule.addDeclaration(generator.allocator, "grid-row-end", "auto");
+            try generator.rules.append(generator.allocator, rule);
             return;
         }
 
-        try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-            .{ .property = "grid-row-end", .value = value.? },
-        });
+        var rule = try generator.createRule(parsed);
+        errdefer rule.deinit(generator.allocator);
+        try rule.addDeclaration(generator.allocator, "grid-row-end", value.?);
+        try generator.rules.append(generator.allocator, rule);
     }
 }
 
@@ -179,9 +195,10 @@ pub fn generateGridAutoFlow(generator: *CSSGenerator, parsed: *const class_parse
 
     const flow_value = grid_flow_map.get(value orelse "") orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "grid-auto-flow", .value = flow_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "grid-auto-flow", flow_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Grid auto columns utilities
@@ -197,9 +214,10 @@ pub fn generateGridAutoColumns(generator: *CSSGenerator, parsed: *const class_pa
 
     const auto_value = grid_auto_cols_map.get(value.?) orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "grid-auto-columns", .value = auto_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "grid-auto-columns", auto_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Grid auto rows utilities
@@ -215,9 +233,10 @@ pub fn generateGridAutoRows(generator: *CSSGenerator, parsed: *const class_parse
 
     const auto_value = grid_auto_rows_map.get(value.?) orelse return;
 
-    try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-        .{ .property = "grid-auto-rows", .value = auto_value },
-    });
+    var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclaration(generator.allocator, "grid-auto-rows", auto_value);
+    try generator.rules.append(generator.allocator, rule);
 }
 
 /// Gap utilities (for both flexbox and grid)
@@ -266,17 +285,20 @@ pub fn generateGap(generator: *CSSGenerator, parsed: *const class_parser.ParsedC
 
     if (axis) |ax| {
         if (std.mem.eql(u8, ax, "x")) {
-            try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-                .{ .property = "column-gap", .value = gap_value },
-            });
+            var rule = try generator.createRule(parsed);
+            errdefer rule.deinit(generator.allocator);
+            try rule.addDeclaration(generator.allocator, "column-gap", gap_value);
+            try generator.rules.append(generator.allocator, rule);
         } else if (std.mem.eql(u8, ax, "y")) {
-            try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-                .{ .property = "row-gap", .value = gap_value },
-            });
+            var rule = try generator.createRule(parsed);
+            errdefer rule.deinit(generator.allocator);
+            try rule.addDeclaration(generator.allocator, "row-gap", gap_value);
+            try generator.rules.append(generator.allocator, rule);
         }
     } else {
-        try generator.addUtility(parsed, &[_]CSSRule.Declaration{
-            .{ .property = "gap", .value = gap_value },
-        });
+        var rule = try generator.createRule(parsed);
+        errdefer rule.deinit(generator.allocator);
+        try rule.addDeclaration(generator.allocator, "gap", gap_value);
+        try generator.rules.append(generator.allocator, rule);
     }
 }
