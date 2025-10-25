@@ -220,6 +220,18 @@ pub const CSSGenerator = struct {
             try self.generateDisplay(parsed, "none");
         } else if (std.mem.eql(u8, utility_name, "grid")) {
             try self.generateDisplay(parsed, "grid");
+        } else if (std.mem.startsWith(u8, utility_name, "table")) {
+            // table, table-auto, table-fixed
+            if (std.mem.eql(u8, utility_name, "table-auto") or std.mem.eql(u8, utility_name, "table-fixed")) {
+                const layout_value = utility_name[6..]; // Skip "table-"
+                try self.generateTableLayout(parsed, layout_value);
+            } else if (std.mem.eql(u8, utility_name, "table")) {
+                try self.generateDisplay(parsed, "table");
+            } else {
+                // table-caption, table-cell, table-column, table-row, etc.
+                const display_value = utility_name; // "table-cell" etc. are valid CSS display values
+                try self.generateDisplay(parsed, display_value);
+            }
         } else if (std.mem.startsWith(u8, utility_name, "container")) {
             // container, container-type, container-name
             if (std.mem.eql(u8, utility_name, "container-type")) {
@@ -249,8 +261,13 @@ pub const CSSGenerator = struct {
             if (utility_parts.value) |val| {
                 try self.generateIsolationUtility(parsed, val);
             }
-        } else if (std.mem.eql(u8, utility_name, "object")) {
-            try self.generateObjectUtility(parsed, utility_parts);
+        } else if (std.mem.startsWith(u8, utility_name, "aspect")) {
+            try self.generateAspectRatio(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "object-fit")) {
+            try self.generateObjectFit(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "object")) {
+            // object-center, object-top, etc. (object-position)
+            try self.generateObjectPosition(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "items")) {
             try self.generateAlignItems(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "justify")) {
@@ -323,6 +340,21 @@ pub const CSSGenerator = struct {
             try self.generateTextIndent(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "align")) {
             try self.generateVerticalAlign(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "list-image")) {
+            try self.generateListStyleImage(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "list-inside") or std.mem.startsWith(u8, utility_name, "list-outside")) {
+            const position_value = utility_name[5..]; // Skip "list-"
+            try self.generateListStylePosition(parsed, position_value);
+        } else if (std.mem.startsWith(u8, utility_name, "list")) {
+            try self.generateListStyleType(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "columns")) {
+            try self.generateColumns(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "break-before")) {
+            try self.generateBreakBefore(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "break-after")) {
+            try self.generateBreakAfter(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "break-inside")) {
+            try self.generateBreakInside(parsed, utility_parts.value);
         } else if (std.mem.eql(u8, utility_name, "break")) {
             if (utility_parts.value) |val| {
                 if (std.mem.eql(u8, val, "normal") or std.mem.eql(u8, val, "words") or
@@ -330,6 +362,10 @@ pub const CSSGenerator = struct {
                     try self.generateWordBreak(parsed);
                 }
             }
+        } else if (std.mem.startsWith(u8, utility_name, "mix-blend")) {
+            try self.generateMixBlend(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "bg-blend")) {
+            try self.generateBgBlend(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "bg")) {
             // Check for special background utilities
             if (utility_parts.value) |val| {
@@ -373,6 +409,11 @@ pub const CSSGenerator = struct {
             } else {
                 try self.generateBackground(parsed, utility_parts.value);
             }
+        } else if (std.mem.startsWith(u8, utility_name, "border-spacing")) {
+            try self.generateBorderSpacing(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "border-collapse") or std.mem.startsWith(u8, utility_name, "border-separate")) {
+            const collapse_value = if (std.mem.eql(u8, utility_name, "border-separate")) "separate" else "collapse";
+            try self.generateBorderCollapse(parsed, collapse_value);
         } else if (std.mem.startsWith(u8, utility_name, "border")) {
             // Check if it's a border color
             if (utility_parts.value) |val| {
@@ -898,6 +939,12 @@ pub const CSSGenerator = struct {
     const transitions = @import("transitions.zig");
     const animations = @import("animations.zig");
     const interactivity = @import("interactivity.zig");
+    const aspect = @import("aspect.zig");
+    const object = @import("object.zig");
+    const blend = @import("blend.zig");
+    const tables = @import("tables.zig");
+    const lists = @import("lists.zig");
+    const columns = @import("columns.zig");
 
     fn generatePadding(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
         return spacing.generatePadding(self, parsed, value);
@@ -1271,6 +1318,72 @@ pub const CSSGenerator = struct {
 
     fn generateScrollSnapStop(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
         return interactivity.generateScrollSnapStop(self, parsed, value);
+    }
+
+    // Aspect ratio utilities
+    fn generateAspectRatio(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return aspect.generateAspectRatio(self, parsed, value);
+    }
+
+    // Object fit/position utilities
+    fn generateObjectFit(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return object.generateObjectFit(self, parsed, value);
+    }
+
+    fn generateObjectPosition(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return object.generateObjectPosition(self, parsed, value);
+    }
+
+    // Blend mode utilities
+    fn generateMixBlend(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return blend.generateMixBlend(self, parsed, value);
+    }
+
+    fn generateBgBlend(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return blend.generateBgBlend(self, parsed, value);
+    }
+
+    // Table utilities
+    fn generateTableLayout(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return tables.generateTableLayout(self, parsed, value);
+    }
+
+    fn generateBorderCollapse(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return tables.generateBorderCollapse(self, parsed, value);
+    }
+
+    fn generateBorderSpacing(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return tables.generateBorderSpacing(self, parsed, value);
+    }
+
+    // List utilities
+    fn generateListStyleType(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return lists.generateListStyleType(self, parsed, value);
+    }
+
+    fn generateListStylePosition(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return lists.generateListStylePosition(self, parsed, value);
+    }
+
+    fn generateListStyleImage(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return lists.generateListStyleImage(self, parsed, value);
+    }
+
+    // Column utilities
+    fn generateColumns(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return columns.generateColumns(self, parsed, value);
+    }
+
+    fn generateBreakBefore(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return columns.generateBreakBefore(self, parsed, value);
+    }
+
+    fn generateBreakAfter(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return columns.generateBreakAfter(self, parsed, value);
+    }
+
+    fn generateBreakInside(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return columns.generateBreakInside(self, parsed, value);
     }
 
     // Dispatchers for complex utility types
