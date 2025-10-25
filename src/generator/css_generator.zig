@@ -195,14 +195,19 @@ pub const CSSGenerator = struct {
         } else if (std.mem.eql(u8, utility_name, "visible")) {
             try self.generateVisibilityUtility(parsed, "visible");
         } else if (std.mem.eql(u8, utility_name, "invisible")) {
-            try self.generateVisibilityUtility(parsed, "hidden");
-        } else if (std.mem.startsWith(u8, utility_name, "z-")) {
+            try self.generateVisibilityUtility(parsed, "invisible");
+        } else if (std.mem.eql(u8, utility_name, "collapse")) {
+            try self.generateVisibilityUtility(parsed, "collapse");
+        } else if (std.mem.eql(u8, utility_name, "z")) {
             try self.generateZIndexUtility(parsed, utility_parts.value);
         } else if (std.mem.eql(u8, utility_name, "isolate")) {
             try self.generateIsolationUtility(parsed, "isolate");
-        } else if (std.mem.eql(u8, utility_name, "isolation-auto")) {
-            try self.generateIsolationUtility(parsed, "auto");
-        } else if (std.mem.startsWith(u8, utility_name, "object-")) {
+        } else if (std.mem.eql(u8, utility_name, "isolation")) {
+            // isolation-auto -> value = "auto"
+            if (utility_parts.value) |val| {
+                try self.generateIsolationUtility(parsed, val);
+            }
+        } else if (std.mem.eql(u8, utility_name, "object")) {
             try self.generateObjectUtility(parsed, utility_parts);
         } else if (std.mem.startsWith(u8, utility_name, "items")) {
             try self.generateAlignItems(parsed, utility_parts.value);
@@ -497,6 +502,7 @@ pub const CSSGenerator = struct {
         for (declarations) |decl| {
             try rule.addDeclaration(self.allocator, decl.property, decl.value);
         }
+        try self.rules.append(self.allocator, rule);
     }
 
     fn applyVariant(self: *CSSGenerator, rule: *CSSRule, variant: []const u8) !void {

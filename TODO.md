@@ -48,12 +48,12 @@ A high-performance Tailwind CSS alternative built with Zig, targeting feature pa
    - ✅ Live reload integration hooks - COMPLETED (watch command available)
 
 3. **Remaining Core Layout Utilities**
-   - [ ] Container utilities with breakpoints
-   - [ ] Overflow utilities (overflow-x/y variants)
-   - [ ] Visibility utilities (visible, invisible, collapse)
-   - [ ] Z-index utilities
-   - [ ] Object-fit and object-position
-   - [ ] Isolation utilities
+   - ✅ Container utilities with breakpoints - COMPLETED
+   - ✅ Overflow utilities (overflow-x/y variants) - COMPLETED (overflow-auto, overflow-hidden, overflow-visible, overflow-scroll, overflow-clip, overflow-x-*, overflow-y-*)
+   - ✅ Visibility utilities (visible, invisible, collapse) - COMPLETED
+   - ✅ Z-index utilities - COMPLETED (z-0, z-10, z-20, z-30, z-40, z-50, z-auto)
+   - ✅ Object-fit and object-position - COMPLETED (object-contain, object-cover, object-fill, object-none, object-scale-down, object-center, object-top, object-bottom, etc.)
+   - ✅ Isolation utilities - COMPLETED (isolate, isolation-auto)
 
 4. **Background Utilities (Remaining)**
    - ✅ Background attachment (bg-fixed, bg-local, bg-scroll) - COMPLETED
