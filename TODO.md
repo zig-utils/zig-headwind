@@ -86,14 +86,29 @@ A high-performance Tailwind CSS alternative built with Zig, targeting feature pa
    - ✅ Text-shadow utilities - COMPLETED
    - ✅ Custom animation properties (iteration-count, direction, fill-mode, play-state) - COMPLETED
 
+### Additional Features Status
+8. **Already Implemented Features (Verified)**
+   - ✅ Important modifier (!) - COMPLETED (e.g., `!text-red-500`, `hover:!bg-blue-500`)
+   - ✅ Dark mode variant - COMPLETED (class and media strategies)
+   - ✅ Responsive breakpoints - COMPLETED (sm, md, lg, xl, 2xl with max-width variants)
+   - ✅ Pseudo-class variants - COMPLETED (hover, focus, active, etc.)
+   - ✅ Pseudo-element variants - COMPLETED (before, after, first-line, etc.)
+   - ✅ Group variants - COMPLETED (group-hover, group-focus, etc.)
+   - ✅ Peer variants - COMPLETED (peer-checked, peer-focus, etc.)
+
 ### Phase C: Advanced Directives & Tooling (Lower Priority)
-8. **CSS Directives**
+9. **CSS Directives**
    - [ ] @utility directive for custom utilities
    - [ ] @variant directive for custom variants
    - [ ] @source directive for content paths
    - [ ] @import directive with proper resolution
    - [ ] @plugin directive for plugin loading
    - [ ] @config directive for inline configuration
+
+10. **Advanced Variant Support**
+   - [ ] Named groups support (group/name)
+   - [ ] Named peer support (peer/name)
+   - [ ] Arbitrary value support (w-[100px], bg-[#ff5733], etc.)
 
 9. **Performance Optimizations**
    - [ ] Multi-threading for parallel file scanning
@@ -947,20 +962,6 @@ A high-performance Tailwind CSS alternative built with Zig, targeting feature pa
 - [ ] Create configuration merging
 - [ ] Implement watch mode integration
 
-### Webpack Loader
-- [ ] Create headwind-loader for webpack
-- [ ] Implement webpack loader interface
-- [ ] Build webpack caching support
-- [ ] Create webpack watch mode integration
-- [ ] Implement multi-compiler support
-
-### PostCSS Plugin
-- [ ] Create headwind-postcss plugin
-- [ ] Implement PostCSS plugin interface
-- [ ] Build @headwind directive processing
-- [ ] Create @apply directive support (optional)
-- [ ] Implement PostCSS integration with other plugins
-
 ### Framework Integrations
 - [ ] Create @headwind/react utilities (cn() helper, etc.)
 - [ ] Build @headwind/vue plugin
@@ -970,29 +971,15 @@ A high-performance Tailwind CSS alternative built with Zig, targeting feature pa
 - [ ] Build @headwind/qwik integration
 
 ### Bundler Plugins
-- [ ] Create Rollup plugin
-- [ ] Build esbuild plugin
-- [ ] Create Parcel plugin
-- [ ] Build Turbopack integration (future)
+- [ ] Create Vite plugin (powered by Bun runtime)
+- [ ] Create Rollup plugin (powered by Bun runtime)
 
-### CSS-in-JS Integration
-- [ ] Create styled-components integration
-- [ ] Build Emotion integration
-- [ ] Create Stitches integration (if possible)
-- [ ] Build vanilla-extract integration
-
-### Static Site Generators
-- [ ] Create Astro integration
-- [ ] Build Eleventy plugin
-- [ ] Create Jekyll plugin (if possible)
-- [ ] Build Hugo integration guide
-
-### Meta-frameworks
-- [ ] Create Next.js plugin/integration guide
+<!-- ### Meta-frameworks - deferred -->
+<!-- - [ ] Create Next.js plugin/integration guide
 - [ ] Build Nuxt module
 - [ ] Create SvelteKit integration guide
 - [ ] Build Remix integration guide
-- [ ] Create Solid Start integration guide
+- [ ] Create Solid Start integration guide -->
 
 ---
 

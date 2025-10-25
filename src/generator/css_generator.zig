@@ -482,8 +482,8 @@ pub const CSSGenerator = struct {
         rule.is_important = parsed.is_important;
 
         // Apply variants (media queries, pseudo-classes, etc.)
-        for (parsed.variants) |variant| {
-            try self.applyVariant(&rule, variant);
+        for (parsed.variants) |variant_info| {
+            try self.applyVariant(&rule, variant_info);
         }
 
         // Don't append to self.rules here - let the caller do it
@@ -505,10 +505,10 @@ pub const CSSGenerator = struct {
         try self.rules.append(self.allocator, rule);
     }
 
-    fn applyVariant(self: *CSSGenerator, rule: *CSSRule, variant: []const u8) !void {
+    fn applyVariant(self: *CSSGenerator, rule: *CSSRule, variant_info: class_parser.VariantInfo) !void {
         const variants_module = @import("variants.zig");
 
-        const variant_def = variants_module.getVariantCSS(variant) orelse return;
+        const variant_def = variants_module.getVariantCSS(variant_info.variant) orelse return;
 
         switch (variant_def.type) {
             .pseudo_class, .pseudo_element => {
@@ -577,49 +577,79 @@ pub const CSSGenerator = struct {
                 }
             },
             .group => {
-                // Group variants like group-hover
-                const state = variant[6..]; // Remove "group-" prefix
-                if (variants_module.pseudo_class_variants.get(state)) |pseudo| {
-                    const group_selector = try std.fmt.allocPrint(
-                        self.allocator,
-                        ".group{s} ",
-                        .{pseudo},
-                    );
-                    if (rule.parent_selector) |existing| {
-                        const combined = try std.fmt.allocPrint(
+                // Group variants: either "group-hover" (unnamed) or "group-hover/sidebar" (named)
+                // Check if this is a state variant (e.g., "group-hover")
+                if (std.mem.startsWith(u8, variant_info.variant, "group-")) {
+                    const state = variant_info.variant[6..]; // Remove "group-" prefix
+                    if (variants_module.pseudo_class_variants.get(state)) |pseudo| {
+                        // Build the group class name
+                        const group_class_name = if (variant_info.name) |name|
+                            // Named group: "group/sidebar" -> ".group\\/sidebar"
+                            try std.fmt.allocPrint(self.allocator, ".group\\/{s}", .{name})
+                        else
+                            // Unnamed group: ".group"
+                            ".group";
+                        defer if (variant_info.name != null) self.allocator.free(group_class_name);
+
+                        const group_selector = try std.fmt.allocPrint(
                             self.allocator,
-                            "{s}{s}",
-                            .{ existing, group_selector },
+                            "{s}{s} ",
+                            .{ group_class_name, pseudo },
                         );
-                        self.allocator.free(group_selector);
-                        self.allocator.free(existing);
-                        rule.parent_selector = combined;
-                    } else {
-                        rule.parent_selector = group_selector;
+                        if (rule.parent_selector) |existing| {
+                            const combined = try std.fmt.allocPrint(
+                                self.allocator,
+                                "{s}{s}",
+                                .{ existing, group_selector },
+                            );
+                            self.allocator.free(group_selector);
+                            self.allocator.free(existing);
+                            rule.parent_selector = combined;
+                        } else {
+                            rule.parent_selector = group_selector;
+                        }
                     }
+                } else if (std.mem.eql(u8, variant_info.variant, "group")) {
+                    // Just "group" without a state - this is for marking an element as a group parent
+                    // We don't generate CSS for this, it's just a marker class
                 }
             },
             .peer => {
-                // Peer variants like peer-checked
-                const state = variant[5..]; // Remove "peer-" prefix
-                if (variants_module.pseudo_class_variants.get(state)) |pseudo| {
-                    const peer_selector = try std.fmt.allocPrint(
-                        self.allocator,
-                        ".peer{s} ~ ",
-                        .{pseudo},
-                    );
-                    if (rule.parent_selector) |existing| {
-                        const combined = try std.fmt.allocPrint(
+                // Peer variants: either "peer-checked" (unnamed) or "peer-checked/label" (named)
+                // Check if this is a state variant (e.g., "peer-checked")
+                if (std.mem.startsWith(u8, variant_info.variant, "peer-")) {
+                    const state = variant_info.variant[5..]; // Remove "peer-" prefix
+                    if (variants_module.pseudo_class_variants.get(state)) |pseudo| {
+                        // Build the peer class name
+                        const peer_class_name = if (variant_info.name) |name|
+                            // Named peer: "peer/label" -> ".peer\\/label"
+                            try std.fmt.allocPrint(self.allocator, ".peer\\/{s}", .{name})
+                        else
+                            // Unnamed peer: ".peer"
+                            ".peer";
+                        defer if (variant_info.name != null) self.allocator.free(peer_class_name);
+
+                        const peer_selector = try std.fmt.allocPrint(
                             self.allocator,
-                            "{s}{s}",
-                            .{ existing, peer_selector },
+                            "{s}{s} ~ ",
+                            .{ peer_class_name, pseudo },
                         );
-                        self.allocator.free(peer_selector);
-                        self.allocator.free(existing);
-                        rule.parent_selector = combined;
-                    } else {
-                        rule.parent_selector = peer_selector;
+                        if (rule.parent_selector) |existing| {
+                            const combined = try std.fmt.allocPrint(
+                                self.allocator,
+                                "{s}{s}",
+                                .{ existing, peer_selector },
+                            );
+                            self.allocator.free(peer_selector);
+                            self.allocator.free(existing);
+                            rule.parent_selector = combined;
+                        } else {
+                            rule.parent_selector = peer_selector;
+                        }
                     }
+                } else if (std.mem.eql(u8, variant_info.variant, "peer")) {
+                    // Just "peer" without a state - this is for marking an element as a peer parent
+                    // We don't generate CSS for this, it's just a marker class
                 }
             },
             .attribute => {
@@ -627,7 +657,7 @@ pub const CSSGenerator = struct {
                 const attr_selector = try std.fmt.allocPrint(
                     self.allocator,
                     "[{s}]",
-                    .{variant},
+                    .{variant_info.variant},
                 );
                 if (rule.pseudo) |existing| {
                     const combined = try std.fmt.allocPrint(

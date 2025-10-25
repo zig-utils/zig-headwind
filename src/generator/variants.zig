@@ -214,8 +214,8 @@ pub fn getVariantCSS(variant: []const u8) ?VariantDef {
         };
     }
 
-    // Check for group variants
-    if (std.mem.startsWith(u8, variant, "group-")) {
+    // Check for group variants (both named "group" and states "group-hover")
+    if (std.mem.eql(u8, variant, "group") or std.mem.startsWith(u8, variant, "group-")) {
         return VariantDef{
             .name = variant,
             .type = .group,
@@ -223,8 +223,8 @@ pub fn getVariantCSS(variant: []const u8) ?VariantDef {
         };
     }
 
-    // Check for peer variants
-    if (std.mem.startsWith(u8, variant, "peer-")) {
+    // Check for peer variants (both named "peer" and states "peer-checked")
+    if (std.mem.eql(u8, variant, "peer") or std.mem.startsWith(u8, variant, "peer-")) {
         return VariantDef{
             .name = variant,
             .type = .peer,

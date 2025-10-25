@@ -2,12 +2,20 @@ const std = @import("std");
 const types = @import("../core/types.zig");
 const string_utils = @import("../utils/string.zig");
 
+/// Variant with optional name (for group/name or peer/name)
+pub const VariantInfo = struct {
+    /// The variant string (e.g., "group-hover" or "group/sidebar")
+    variant: []const u8,
+    /// Optional name for named groups/peers (e.g., "sidebar")
+    name: ?[]const u8,
+};
+
 /// Parsed CSS class with variants
 pub const ParsedClass = struct {
     /// Original class string
     raw: []const u8,
-    /// Variants (e.g., ["hover", "focus", "md"])
-    variants: [][]const u8,
+    /// Variants with optional names (e.g., ["hover", "focus", "md", "group/sidebar"])
+    variants: []VariantInfo,
     /// Base utility (e.g., "bg-blue-500")
     utility: []const u8,
     /// Whether this is an arbitrary value (e.g., "w-[100px]")
@@ -18,8 +26,11 @@ pub const ParsedClass = struct {
     is_important: bool,
 
     pub fn deinit(self: *ParsedClass, allocator: std.mem.Allocator) void {
-        for (self.variants) |variant| {
-            allocator.free(variant);
+        for (self.variants) |variant_info| {
+            allocator.free(variant_info.variant);
+            if (variant_info.name) |name| {
+                allocator.free(name);
+            }
         }
         allocator.free(self.variants);
         allocator.free(self.utility);
@@ -96,9 +107,12 @@ pub fn parseClass(allocator: std.mem.Allocator, class_str: []const u8) !ParsedCl
     }
 
     // Re-parse variants properly
-    var final_variants: std.ArrayList([]const u8) = .{};
+    var final_variants: std.ArrayList(VariantInfo) = .{};
     errdefer {
-        for (final_variants.items) |v| allocator.free(v);
+        for (final_variants.items) |v| {
+            allocator.free(v.variant);
+            if (v.name) |name| allocator.free(name);
+        }
         final_variants.deinit(allocator);
     }
 
@@ -121,8 +135,24 @@ pub fn parseClass(allocator: std.mem.Allocator, class_str: []const u8) !ParsedCl
                     }
                 };
 
-                const variant = try allocator.dupe(u8, current[prev_colon..pos]);
-                try final_variants.append(allocator, variant);
+                const variant_str = current[prev_colon..pos];
+
+                // Check for named group/peer (e.g., "group/sidebar" or "peer/label")
+                var variant_info: VariantInfo = .{
+                    .variant = undefined,
+                    .name = null,
+                };
+
+                if (std.mem.indexOf(u8, variant_str, "/")) |slash_pos| {
+                    // Has a name: "group/sidebar" -> variant="group", name="sidebar"
+                    variant_info.variant = try allocator.dupe(u8, variant_str[0..slash_pos]);
+                    variant_info.name = try allocator.dupe(u8, variant_str[slash_pos + 1..]);
+                } else {
+                    // No name: just the variant
+                    variant_info.variant = try allocator.dupe(u8, variant_str);
+                }
+
+                try final_variants.append(allocator, variant_info);
             }
         }
         pos += 1;
