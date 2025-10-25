@@ -71,10 +71,11 @@ A high-performance Tailwind CSS alternative built with Zig, targeting feature pa
    - [ ] Named peer support
 
 6. **Container Queries** - Modern CSS feature
-   - [ ] @container rule generation
-   - [ ] container-type utilities
-   - [ ] Container query variants (@sm, @md, @lg, etc.)
-   - [ ] Named container queries
+   - ✅ container-type utilities (container-type-normal, container-type-size, container-type-inline-size) - COMPLETED
+   - ✅ container-name utilities for named containers - COMPLETED
+   - ✅ Combined container utility (container, container-normal, container-size) - COMPLETED
+   - [ ] @container rule generation (requires variant system enhancement)
+   - [ ] Container query variants (@sm, @md, @lg, etc.) (requires variant system enhancement)
 
 7. **Modern CSS Enhancements**
    - ✅ OKLCH color space support - COMPLETED (bg-oklch-[...], text-oklch-[...])

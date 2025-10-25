@@ -148,8 +148,18 @@ pub const CSSGenerator = struct {
             try self.generateDisplay(parsed, "none");
         } else if (std.mem.eql(u8, utility_name, "grid")) {
             try self.generateDisplay(parsed, "grid");
-        } else if (std.mem.eql(u8, utility_name, "container")) {
-            try self.generateContainer(parsed);
+        } else if (std.mem.startsWith(u8, utility_name, "container")) {
+            // container, container-type, container-name
+            if (std.mem.eql(u8, utility_name, "container-type")) {
+                try self.generateContainerType(parsed, utility_parts.value);
+            } else if (std.mem.eql(u8, utility_name, "container-name")) {
+                try self.generateContainerName(parsed, utility_parts.value);
+            } else if (std.mem.eql(u8, utility_name, "container")) {
+                try self.generateContainer(parsed);
+            } else {
+                // container-normal, container-size - these set container-type
+                try self.generateContainerTypeValue(parsed, utility_parts.value);
+            }
         } else if (std.mem.startsWith(u8, utility_name, "overflow")) {
             try self.generateOverflowUtility(parsed, utility_parts);
         } else if (std.mem.eql(u8, utility_name, "visible")) {
@@ -1014,6 +1024,21 @@ pub const CSSGenerator = struct {
     fn generateContainer(self: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
         const layout = @import("layout.zig");
         return layout.generateContainer(self, parsed);
+    }
+
+    fn generateContainerType(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        const container = @import("container.zig");
+        return container.generateContainerType(self, parsed, value);
+    }
+
+    fn generateContainerName(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        const container = @import("container.zig");
+        return container.generateContainerName(self, parsed, value);
+    }
+
+    fn generateContainerTypeValue(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        const container = @import("container.zig");
+        return container.generateContainer(self, parsed, value);
     }
 
     fn generateOverflowUtility(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, parts: anytype) !void {
