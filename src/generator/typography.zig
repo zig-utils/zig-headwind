@@ -248,3 +248,98 @@ pub fn generateLetterSpacing(generator: *CSSGenerator, parsed: *const class_pars
     try rule.addDeclaration(generator.allocator, "letter-spacing", letter_spacing);
     try generator.rules.append(generator.allocator, rule);
 }
+
+/// Whitespace utilities (whitespace-normal, whitespace-nowrap, whitespace-pre, etc.)
+pub fn generateWhitespace(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+    if (value == null) return;
+
+    var rule = try generator.createRule(parsed);
+
+    if (std.mem.eql(u8, value.?, "normal")) {
+        try rule.addDeclaration(generator.allocator, "white-space", "normal");
+    } else if (std.mem.eql(u8, value.?, "nowrap")) {
+        try rule.addDeclaration(generator.allocator, "white-space", "nowrap");
+    } else if (std.mem.eql(u8, value.?, "pre")) {
+        try rule.addDeclaration(generator.allocator, "white-space", "pre");
+    } else if (std.mem.eql(u8, value.?, "pre-line")) {
+        try rule.addDeclaration(generator.allocator, "white-space", "pre-line");
+    } else if (std.mem.eql(u8, value.?, "pre-wrap")) {
+        try rule.addDeclaration(generator.allocator, "white-space", "pre-wrap");
+    } else if (std.mem.eql(u8, value.?, "break-spaces")) {
+        try rule.addDeclaration(generator.allocator, "white-space", "break-spaces");
+    } else {
+        return;
+    }
+
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Text wrap utilities (text-wrap, text-nowrap, text-balance, text-pretty)
+pub fn generateTextWrap(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
+    var rule = try generator.createRule(parsed);
+
+    const utility = parsed.utility;
+    if (std.mem.eql(u8, utility, "text-wrap")) {
+        try rule.addDeclaration(generator.allocator, "text-wrap", "wrap");
+    } else if (std.mem.eql(u8, utility, "text-nowrap")) {
+        try rule.addDeclaration(generator.allocator, "text-wrap", "nowrap");
+    } else if (std.mem.eql(u8, utility, "text-balance")) {
+        try rule.addDeclaration(generator.allocator, "text-wrap", "balance");
+    } else if (std.mem.eql(u8, utility, "text-pretty")) {
+        try rule.addDeclaration(generator.allocator, "text-wrap", "pretty");
+    } else {
+        return;
+    }
+
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Vertical align utilities
+pub fn generateVerticalAlign(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+    if (value == null) return;
+
+    var rule = try generator.createRule(parsed);
+
+    if (std.mem.eql(u8, value.?, "baseline")) {
+        try rule.addDeclaration(generator.allocator, "vertical-align", "baseline");
+    } else if (std.mem.eql(u8, value.?, "top")) {
+        try rule.addDeclaration(generator.allocator, "vertical-align", "top");
+    } else if (std.mem.eql(u8, value.?, "middle")) {
+        try rule.addDeclaration(generator.allocator, "vertical-align", "middle");
+    } else if (std.mem.eql(u8, value.?, "bottom")) {
+        try rule.addDeclaration(generator.allocator, "vertical-align", "bottom");
+    } else if (std.mem.eql(u8, value.?, "text-top")) {
+        try rule.addDeclaration(generator.allocator, "vertical-align", "text-top");
+    } else if (std.mem.eql(u8, value.?, "text-bottom")) {
+        try rule.addDeclaration(generator.allocator, "vertical-align", "text-bottom");
+    } else if (std.mem.eql(u8, value.?, "sub")) {
+        try rule.addDeclaration(generator.allocator, "vertical-align", "sub");
+    } else if (std.mem.eql(u8, value.?, "super")) {
+        try rule.addDeclaration(generator.allocator, "vertical-align", "super");
+    } else {
+        return;
+    }
+
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Word break utilities
+pub fn generateWordBreak(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
+    var rule = try generator.createRule(parsed);
+
+    const utility = parsed.utility;
+    if (std.mem.eql(u8, utility, "break-normal")) {
+        try rule.addDeclaration(generator.allocator, "overflow-wrap", "normal");
+        try rule.addDeclaration(generator.allocator, "word-break", "normal");
+    } else if (std.mem.eql(u8, utility, "break-words")) {
+        try rule.addDeclaration(generator.allocator, "overflow-wrap", "break-word");
+    } else if (std.mem.eql(u8, utility, "break-all")) {
+        try rule.addDeclaration(generator.allocator, "word-break", "break-all");
+    } else if (std.mem.eql(u8, utility, "break-keep")) {
+        try rule.addDeclaration(generator.allocator, "word-break", "keep-all");
+    } else {
+        return;
+    }
+
+    try generator.rules.append(generator.allocator, rule);
+}

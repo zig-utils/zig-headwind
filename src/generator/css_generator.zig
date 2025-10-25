@@ -241,11 +241,21 @@ pub const CSSGenerator = struct {
             try self.generateMargin(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "gap")) {
             try self.generateGap(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "whitespace")) {
+            try self.generateWhitespace(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "w")) {
             try self.generateWidth(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "h")) {
             try self.generateHeight(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "text")) {
+            // Check for text-wrap utilities first
+            if (utility_parts.value) |val| {
+                if (std.mem.eql(u8, val, "wrap") or std.mem.eql(u8, val, "nowrap") or
+                    std.mem.eql(u8, val, "balance") or std.mem.eql(u8, val, "pretty")) {
+                    try self.generateTextWrap(parsed);
+                    return; // Early return to avoid further checks
+                }
+            }
             // text-shadow-sm, text-oklch-[...], text-color-mix-[...], etc.
             if (std.mem.startsWith(u8, utility_name, "text-shadow")) {
                 // text-shadow-sm -> value="sm"
@@ -287,6 +297,11 @@ pub const CSSGenerator = struct {
             try self.generateLineHeight(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "tracking")) {
             try self.generateLetterSpacing(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "align")) {
+            try self.generateVerticalAlign(parsed, utility_parts.value);
+        } else if (std.mem.eql(u8, utility_name, "break-normal") or std.mem.eql(u8, utility_name, "break-words") or
+                   std.mem.eql(u8, utility_name, "break-all") or std.mem.eql(u8, utility_name, "break-keep")) {
+            try self.generateWordBreak(parsed);
         } else if (std.mem.startsWith(u8, utility_name, "bg")) {
             // Check for special background utilities
             if (utility_parts.value) |val| {
@@ -878,6 +893,22 @@ pub const CSSGenerator = struct {
 
     fn generateLetterSpacing(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
         return typography.generateLetterSpacing(self, parsed, value);
+    }
+
+    fn generateWhitespace(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return typography.generateWhitespace(self, parsed, value);
+    }
+
+    fn generateTextWrap(self: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
+        return typography.generateTextWrap(self, parsed);
+    }
+
+    fn generateVerticalAlign(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return typography.generateVerticalAlign(self, parsed, value);
+    }
+
+    fn generateWordBreak(self: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
+        return typography.generateWordBreak(self, parsed);
     }
 
     fn generateBackground(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
