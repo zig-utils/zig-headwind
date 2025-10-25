@@ -939,12 +939,10 @@ pub const CSSGenerator = struct {
     const transitions = @import("transitions.zig");
     const animations = @import("animations.zig");
     const interactivity = @import("interactivity.zig");
-    const aspect = @import("aspect.zig");
-    const object = @import("object.zig");
     const blend = @import("blend.zig");
     const tables = @import("tables.zig");
     const lists = @import("lists.zig");
-    const columns = @import("columns.zig");
+    const layout = @import("layout.zig");
 
     fn generatePadding(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
         return spacing.generatePadding(self, parsed, value);
@@ -1322,16 +1320,16 @@ pub const CSSGenerator = struct {
 
     // Aspect ratio utilities
     fn generateAspectRatio(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
-        return aspect.generateAspectRatio(self, parsed, value);
+        return layout.generateAspectRatio(self, parsed, value);
     }
 
     // Object fit/position utilities
     fn generateObjectFit(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
-        return object.generateObjectFit(self, parsed, value);
+        return layout.generateObjectFit(self, parsed, value);
     }
 
     fn generateObjectPosition(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
-        return object.generateObjectPosition(self, parsed, value);
+        return layout.generateObjectPosition(self, parsed, value);
     }
 
     // Blend mode utilities
@@ -1371,19 +1369,19 @@ pub const CSSGenerator = struct {
 
     // Column utilities
     fn generateColumns(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
-        return columns.generateColumns(self, parsed, value);
+        return layout.generateColumns(self, parsed, value);
     }
 
     fn generateBreakBefore(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
-        return columns.generateBreakBefore(self, parsed, value);
+        return layout.generateBreak(self, parsed, "before", value);
     }
 
     fn generateBreakAfter(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
-        return columns.generateBreakAfter(self, parsed, value);
+        return layout.generateBreak(self, parsed, "after", value);
     }
 
     fn generateBreakInside(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
-        return columns.generateBreakInside(self, parsed, value);
+        return layout.generateBreak(self, parsed, "inside", value);
     }
 
     // Dispatchers for complex utility types
@@ -1445,7 +1443,6 @@ pub const CSSGenerator = struct {
 
     // Layout utility wrappers
     fn generateContainer(self: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
-        const layout = @import("layout.zig");
         return layout.generateContainer(self, parsed);
     }
 
@@ -1465,7 +1462,6 @@ pub const CSSGenerator = struct {
     }
 
     fn generateOverflowUtility(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, parts: anytype) !void {
-        const layout = @import("layout.zig");
         // overflow-x-auto -> axis="x", value="auto"
         // overflow-hidden -> axis=null, value="hidden"
         if (parts.value) |val| {
@@ -1480,22 +1476,18 @@ pub const CSSGenerator = struct {
     }
 
     fn generateVisibilityUtility(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: []const u8) !void {
-        const layout = @import("layout.zig");
         return layout.generateVisibility(self, parsed, value);
     }
 
     fn generateZIndexUtility(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
-        const layout = @import("layout.zig");
         return layout.generateZIndex(self, parsed, value);
     }
 
     fn generateIsolationUtility(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: []const u8) !void {
-        const layout = @import("layout.zig");
         return layout.generateIsolation(self, parsed, value);
     }
 
     fn generateObjectUtility(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, parts: anytype) !void {
-        const layout = @import("layout.zig");
         // object-cover, object-contain, object-fill, etc.
         // object-center, object-top, etc.
         if (parts.value) |val| {
