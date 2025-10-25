@@ -265,3 +265,180 @@ pub fn generateOrigin(
     try rule.addDeclaration(generator.allocator, "transform-origin", origin_value);
     try generator.rules.append(generator.allocator, rule);
 }
+
+/// Transform-style utilities (for 3D transforms)
+pub fn generateTransformStyle(
+    generator: *CSSGenerator,
+    parsed: *const class_parser.ParsedClass,
+    value: ?[]const u8,
+) !void {
+    const transform_style_map = std.StaticStringMap([]const u8).initComptime(.{
+        .{ "flat", "flat" },
+        .{ "preserve-3d", "preserve-3d" },
+    });
+
+    const style_value = transform_style_map.get(value orelse "flat") orelse return;
+
+    var rule = try generator.createRule(parsed);
+    try rule.addDeclaration(generator.allocator, "transform-style", style_value);
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Perspective utilities
+pub fn generatePerspective(
+    generator: *CSSGenerator,
+    parsed: *const class_parser.ParsedClass,
+    value: ?[]const u8,
+) !void {
+    if (value == null) return;
+
+    const perspective_scale = std.StaticStringMap([]const u8).initComptime(.{
+        .{ "none", "none" },
+        .{ "0", "0px" },
+        .{ "100", "100px" },
+        .{ "200", "200px" },
+        .{ "300", "300px" },
+        .{ "400", "400px" },
+        .{ "500", "500px" },
+        .{ "600", "600px" },
+        .{ "700", "700px" },
+        .{ "800", "800px" },
+        .{ "900", "900px" },
+        .{ "1000", "1000px" },
+        .{ "1500", "1500px" },
+        .{ "2000", "2000px" },
+    });
+
+    const perspective_value = perspective_scale.get(value.?) orelse return;
+
+    var rule = try generator.createRule(parsed);
+    try rule.addDeclaration(generator.allocator, "perspective", perspective_value);
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Perspective-origin utilities
+pub fn generatePerspectiveOrigin(
+    generator: *CSSGenerator,
+    parsed: *const class_parser.ParsedClass,
+    value: ?[]const u8,
+) !void {
+    if (value == null) return;
+
+    const perspective_origin_values = std.StaticStringMap([]const u8).initComptime(.{
+        .{ "center", "center" },
+        .{ "top", "top" },
+        .{ "top-right", "top right" },
+        .{ "right", "right" },
+        .{ "bottom-right", "bottom right" },
+        .{ "bottom", "bottom" },
+        .{ "bottom-left", "bottom left" },
+        .{ "left", "left" },
+        .{ "top-left", "top left" },
+    });
+
+    const origin_value = perspective_origin_values.get(value.?) orelse return;
+
+    var rule = try generator.createRule(parsed);
+    try rule.addDeclaration(generator.allocator, "perspective-origin", origin_value);
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Backface-visibility utilities
+pub fn generateBackfaceVisibility(
+    generator: *CSSGenerator,
+    parsed: *const class_parser.ParsedClass,
+    value: ?[]const u8,
+) !void {
+    const visibility_map = std.StaticStringMap([]const u8).initComptime(.{
+        .{ "visible", "visible" },
+        .{ "hidden", "hidden" },
+    });
+
+    const visibility_value = visibility_map.get(value orelse "visible") orelse return;
+
+    var rule = try generator.createRule(parsed);
+    try rule.addDeclaration(generator.allocator, "backface-visibility", visibility_value);
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Animation iteration count utilities
+pub fn generateAnimationIterationCount(
+    generator: *CSSGenerator,
+    parsed: *const class_parser.ParsedClass,
+    value: ?[]const u8,
+) !void {
+    if (value == null) return;
+
+    const iteration_map = std.StaticStringMap([]const u8).initComptime(.{
+        .{ "infinite", "infinite" },
+        .{ "1", "1" },
+        .{ "2", "2" },
+        .{ "3", "3" },
+        .{ "4", "4" },
+        .{ "5", "5" },
+    });
+
+    const iteration_value = iteration_map.get(value.?) orelse return;
+
+    var rule = try generator.createRule(parsed);
+    try rule.addDeclaration(generator.allocator, "animation-iteration-count", iteration_value);
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Animation direction utilities
+pub fn generateAnimationDirection(
+    generator: *CSSGenerator,
+    parsed: *const class_parser.ParsedClass,
+    value: ?[]const u8,
+) !void {
+    const direction_map = std.StaticStringMap([]const u8).initComptime(.{
+        .{ "normal", "normal" },
+        .{ "reverse", "reverse" },
+        .{ "alternate", "alternate" },
+        .{ "alternate-reverse", "alternate-reverse" },
+    });
+
+    const direction_value = direction_map.get(value orelse "normal") orelse return;
+
+    var rule = try generator.createRule(parsed);
+    try rule.addDeclaration(generator.allocator, "animation-direction", direction_value);
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Animation fill mode utilities
+pub fn generateAnimationFillMode(
+    generator: *CSSGenerator,
+    parsed: *const class_parser.ParsedClass,
+    value: ?[]const u8,
+) !void {
+    const fill_mode_map = std.StaticStringMap([]const u8).initComptime(.{
+        .{ "none", "none" },
+        .{ "forwards", "forwards" },
+        .{ "backwards", "backwards" },
+        .{ "both", "both" },
+    });
+
+    const fill_mode_value = fill_mode_map.get(value orelse "none") orelse return;
+
+    var rule = try generator.createRule(parsed);
+    try rule.addDeclaration(generator.allocator, "animation-fill-mode", fill_mode_value);
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Animation play state utilities
+pub fn generateAnimationPlayState(
+    generator: *CSSGenerator,
+    parsed: *const class_parser.ParsedClass,
+    value: ?[]const u8,
+) !void {
+    const play_state_map = std.StaticStringMap([]const u8).initComptime(.{
+        .{ "running", "running" },
+        .{ "paused", "paused" },
+    });
+
+    const play_state_value = play_state_map.get(value orelse "running") orelse return;
+
+    var rule = try generator.createRule(parsed);
+    try rule.addDeclaration(generator.allocator, "animation-play-state", play_state_value);
+    try generator.rules.append(generator.allocator, rule);
+}

@@ -224,3 +224,177 @@ pub fn generateWillChange(
     try rule.addDeclaration(generator.allocator, "will-change", will_change_value);
     try generator.rules.append(generator.allocator, rule);
 }
+
+/// Spacing scale for scroll margin/padding
+const spacing_scale = std.StaticStringMap([]const u8).initComptime(.{
+    .{ "0", "0px" },
+    .{ "px", "1px" },
+    .{ "0.5", "0.125rem" },
+    .{ "1", "0.25rem" },
+    .{ "2", "0.5rem" },
+    .{ "3", "0.75rem" },
+    .{ "4", "1rem" },
+    .{ "5", "1.25rem" },
+    .{ "6", "1.5rem" },
+    .{ "8", "2rem" },
+    .{ "10", "2.5rem" },
+    .{ "12", "3rem" },
+    .{ "16", "4rem" },
+    .{ "20", "5rem" },
+    .{ "24", "6rem" },
+    .{ "32", "8rem" },
+});
+
+/// Generate scroll-margin utilities
+pub fn generateScrollMargin(
+    generator: *CSSGenerator,
+    parsed: *const class_parser.ParsedClass,
+    side: ?[]const u8,
+    value: ?[]const u8,
+) !void {
+    if (value == null) return;
+
+    const spacing_value = spacing_scale.get(value.?) orelse return;
+
+    var rule = try generator.createRule(parsed);
+    if (side) |s| {
+        if (std.mem.eql(u8, s, "x")) {
+            try rule.addDeclaration(generator.allocator, "scroll-margin-left", spacing_value);
+            try rule.addDeclaration(generator.allocator, "scroll-margin-right", spacing_value);
+        } else if (std.mem.eql(u8, s, "y")) {
+            try rule.addDeclaration(generator.allocator, "scroll-margin-top", spacing_value);
+            try rule.addDeclaration(generator.allocator, "scroll-margin-bottom", spacing_value);
+        } else if (std.mem.eql(u8, s, "t")) {
+            try rule.addDeclaration(generator.allocator, "scroll-margin-top", spacing_value);
+        } else if (std.mem.eql(u8, s, "r")) {
+            try rule.addDeclaration(generator.allocator, "scroll-margin-right", spacing_value);
+        } else if (std.mem.eql(u8, s, "b")) {
+            try rule.addDeclaration(generator.allocator, "scroll-margin-bottom", spacing_value);
+        } else if (std.mem.eql(u8, s, "l")) {
+            try rule.addDeclaration(generator.allocator, "scroll-margin-left", spacing_value);
+        }
+    } else {
+        try rule.addDeclaration(generator.allocator, "scroll-margin", spacing_value);
+    }
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Generate scroll-padding utilities
+pub fn generateScrollPadding(
+    generator: *CSSGenerator,
+    parsed: *const class_parser.ParsedClass,
+    side: ?[]const u8,
+    value: ?[]const u8,
+) !void {
+    if (value == null) return;
+
+    const spacing_value = spacing_scale.get(value.?) orelse return;
+
+    var rule = try generator.createRule(parsed);
+    if (side) |s| {
+        if (std.mem.eql(u8, s, "x")) {
+            try rule.addDeclaration(generator.allocator, "scroll-padding-left", spacing_value);
+            try rule.addDeclaration(generator.allocator, "scroll-padding-right", spacing_value);
+        } else if (std.mem.eql(u8, s, "y")) {
+            try rule.addDeclaration(generator.allocator, "scroll-padding-top", spacing_value);
+            try rule.addDeclaration(generator.allocator, "scroll-padding-bottom", spacing_value);
+        } else if (std.mem.eql(u8, s, "t")) {
+            try rule.addDeclaration(generator.allocator, "scroll-padding-top", spacing_value);
+        } else if (std.mem.eql(u8, s, "r")) {
+            try rule.addDeclaration(generator.allocator, "scroll-padding-right", spacing_value);
+        } else if (std.mem.eql(u8, s, "b")) {
+            try rule.addDeclaration(generator.allocator, "scroll-padding-bottom", spacing_value);
+        } else if (std.mem.eql(u8, s, "l")) {
+            try rule.addDeclaration(generator.allocator, "scroll-padding-left", spacing_value);
+        }
+    } else {
+        try rule.addDeclaration(generator.allocator, "scroll-padding", spacing_value);
+    }
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Generate scroll-snap-type utilities
+pub fn generateScrollSnapType(
+    generator: *CSSGenerator,
+    parsed: *const class_parser.ParsedClass,
+    value: ?[]const u8,
+) !void {
+    const snap_type_map = std.StaticStringMap([]const u8).initComptime(.{
+        .{ "none", "none" },
+        .{ "x", "x var(--tw-scroll-snap-strictness)" },
+        .{ "y", "y var(--tw-scroll-snap-strictness)" },
+        .{ "both", "both var(--tw-scroll-snap-strictness)" },
+        .{ "mandatory", "var(--tw-scroll-snap-strictness)" },
+        .{ "proximity", "var(--tw-scroll-snap-strictness)" },
+    });
+
+    const snap_value = snap_type_map.get(value orelse "none") orelse return;
+
+    var rule = try generator.createRule(parsed);
+    try rule.addDeclaration(generator.allocator, "scroll-snap-type", snap_value);
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Generate scroll-snap-align utilities
+pub fn generateScrollSnapAlign(
+    generator: *CSSGenerator,
+    parsed: *const class_parser.ParsedClass,
+    value: ?[]const u8,
+) !void {
+    const snap_align_map = std.StaticStringMap([]const u8).initComptime(.{
+        .{ "start", "start" },
+        .{ "end", "end" },
+        .{ "center", "center" },
+        .{ "none", "none" },
+    });
+
+    const align_value = snap_align_map.get(value orelse "start") orelse return;
+
+    var rule = try generator.createRule(parsed);
+    try rule.addDeclaration(generator.allocator, "scroll-snap-align", align_value);
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Generate scroll-snap-stop utilities
+pub fn generateScrollSnapStop(
+    generator: *CSSGenerator,
+    parsed: *const class_parser.ParsedClass,
+    value: ?[]const u8,
+) !void {
+    const snap_stop_map = std.StaticStringMap([]const u8).initComptime(.{
+        .{ "normal", "normal" },
+        .{ "always", "always" },
+    });
+
+    const stop_value = snap_stop_map.get(value orelse "normal") orelse return;
+
+    var rule = try generator.createRule(parsed);
+    try rule.addDeclaration(generator.allocator, "scroll-snap-stop", stop_value);
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Generate touch-action utilities
+pub fn generateTouchAction(
+    generator: *CSSGenerator,
+    parsed: *const class_parser.ParsedClass,
+    value: ?[]const u8,
+) !void {
+    const touch_action_map = std.StaticStringMap([]const u8).initComptime(.{
+        .{ "auto", "auto" },
+        .{ "none", "none" },
+        .{ "pan-x", "pan-x" },
+        .{ "pan-left", "pan-left" },
+        .{ "pan-right", "pan-right" },
+        .{ "pan-y", "pan-y" },
+        .{ "pan-up", "pan-up" },
+        .{ "pan-down", "pan-down" },
+        .{ "pinch-zoom", "pinch-zoom" },
+        .{ "manipulation", "manipulation" },
+    });
+
+    const action_value = touch_action_map.get(value orelse "auto") orelse return;
+
+    var rule = try generator.createRule(parsed);
+    try rule.addDeclaration(generator.allocator, "touch-action", action_value);
+    try generator.rules.append(generator.allocator, rule);
+}

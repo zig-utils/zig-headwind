@@ -86,11 +86,29 @@ pub const CSSRule = struct {
 pub const CSSGenerator = struct {
     allocator: std.mem.Allocator,
     rules: std.ArrayList(CSSRule),
+    dark_mode_selector: []const u8,
+    dark_mode_strategy: DarkModeStrategy,
+
+    pub const DarkModeStrategy = enum {
+        @"class",
+        media,
+    };
+
+    pub const Config = struct {
+        dark_mode_selector: []const u8 = "dark",
+        dark_mode_strategy: DarkModeStrategy = .@"class",
+    };
 
     pub fn init(allocator: std.mem.Allocator) CSSGenerator {
+        return initWithConfig(allocator, .{});
+    }
+
+    pub fn initWithConfig(allocator: std.mem.Allocator, config: Config) CSSGenerator {
         return .{
             .allocator = allocator,
             .rules = std.ArrayList(CSSRule){},
+            .dark_mode_selector = config.dark_mode_selector,
+            .dark_mode_strategy = config.dark_mode_strategy,
         };
     }
 
@@ -130,6 +148,22 @@ pub const CSSGenerator = struct {
             try self.generateDisplay(parsed, "none");
         } else if (std.mem.eql(u8, utility_name, "grid")) {
             try self.generateDisplay(parsed, "grid");
+        } else if (std.mem.eql(u8, utility_name, "container")) {
+            try self.generateContainer(parsed);
+        } else if (std.mem.startsWith(u8, utility_name, "overflow")) {
+            try self.generateOverflowUtility(parsed, utility_parts);
+        } else if (std.mem.eql(u8, utility_name, "visible")) {
+            try self.generateVisibilityUtility(parsed, "visible");
+        } else if (std.mem.eql(u8, utility_name, "invisible")) {
+            try self.generateVisibilityUtility(parsed, "hidden");
+        } else if (std.mem.startsWith(u8, utility_name, "z-")) {
+            try self.generateZIndexUtility(parsed, utility_parts.value);
+        } else if (std.mem.eql(u8, utility_name, "isolate")) {
+            try self.generateIsolationUtility(parsed, "isolate");
+        } else if (std.mem.eql(u8, utility_name, "isolation-auto")) {
+            try self.generateIsolationUtility(parsed, "auto");
+        } else if (std.mem.startsWith(u8, utility_name, "object-")) {
+            try self.generateObjectUtility(parsed, utility_parts);
         } else if (std.mem.startsWith(u8, utility_name, "items")) {
             try self.generateAlignItems(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "justify")) {
@@ -145,7 +179,14 @@ pub const CSSGenerator = struct {
         } else if (std.mem.startsWith(u8, utility_name, "h")) {
             try self.generateHeight(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "text")) {
-            try self.generateText(parsed, utility_parts.value);
+            // text-shadow-sm, text-shadow-lg, etc.
+            if (std.mem.startsWith(u8, utility_name, "text-shadow")) {
+                // text-shadow-sm -> value="sm"
+                const shadow_value = if (std.mem.eql(u8, utility_name, "text-shadow")) null else utility_parts.value;
+                try self.generateTextShadow(parsed, shadow_value);
+            } else {
+                try self.generateText(parsed, utility_parts.value);
+            }
         } else if (std.mem.startsWith(u8, utility_name, "font")) {
             try self.generateFont(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "bg")) {
@@ -195,6 +236,35 @@ pub const CSSGenerator = struct {
             }
         } else if (std.mem.startsWith(u8, utility_name, "origin")) {
             try self.generateOrigin(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "transform-")) {
+            // transform-flat, transform-preserve-3d
+            if (std.mem.indexOf(u8, utility_name, "transform-")) |_| {
+                const style_value = utility_name[10..]; // Skip "transform-"
+                try self.generateTransformStyle(parsed, style_value);
+            }
+        } else if (std.mem.startsWith(u8, utility_name, "perspective")) {
+            // perspective-500, perspective-origin-center
+            if (std.mem.startsWith(u8, utility_name, "perspective-origin")) {
+                const origin_value = utility_parts.value;
+                try self.generatePerspectiveOrigin(parsed, origin_value);
+            } else {
+                try self.generatePerspective(parsed, utility_parts.value);
+            }
+        } else if (std.mem.startsWith(u8, utility_name, "backface-")) {
+            // backface-visible, backface-hidden
+            const visibility_value = utility_name[9..]; // Skip "backface-"
+            try self.generateBackfaceVisibility(parsed, visibility_value);
+        } else if (std.mem.startsWith(u8, utility_name, "animate-")) {
+            // animate-iteration-*, animate-direction-*, etc.
+            if (std.mem.indexOf(u8, utility_name, "iteration")) |_| {
+                try self.generateAnimationIterationCount(parsed, utility_parts.value);
+            } else if (std.mem.indexOf(u8, utility_name, "direction")) |_| {
+                try self.generateAnimationDirection(parsed, utility_parts.value);
+            } else if (std.mem.indexOf(u8, utility_name, "fill")) |_| {
+                try self.generateAnimationFillMode(parsed, utility_parts.value);
+            } else if (std.mem.indexOf(u8, utility_name, "play")) |_| {
+                try self.generateAnimationPlayState(parsed, utility_parts.value);
+            }
         } else if (std.mem.startsWith(u8, utility_name, "blur")) {
             try self.generateBlur(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "brightness")) {
@@ -240,7 +310,11 @@ pub const CSSGenerator = struct {
         } else if (std.mem.startsWith(u8, utility_name, "resize")) {
             try self.generateResize(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "scroll")) {
-            try self.generateScrollBehavior(parsed, utility_parts.value);
+            try self.dispatchScrollUtility(parsed, utility_name, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "snap")) {
+            try self.dispatchSnapUtility(parsed, utility_name, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "touch")) {
+            try self.generateTouchAction(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "select")) {
             try self.generateSelect(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "appearance")) {
@@ -325,7 +399,22 @@ pub const CSSGenerator = struct {
             try self.applyVariant(&rule, variant);
         }
 
+        try self.rules.append(self.allocator, rule);
         return rule;
+    }
+
+    /// Helper declaration struct for addUtility
+    pub const Declaration = struct {
+        property: []const u8,
+        value: []const u8,
+    };
+
+    /// Helper method for compatibility with existing layout code
+    pub fn addUtility(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, declarations: []const Declaration) !void {
+        var rule = try self.createRule(parsed);
+        for (declarations) |decl| {
+            try rule.addDeclaration(self.allocator, decl.property, decl.value);
+        }
     }
 
     fn applyVariant(self: *CSSGenerator, rule: *CSSRule, variant: []const u8) !void {
@@ -357,17 +446,38 @@ pub const CSSGenerator = struct {
                 rule.media = try self.allocator.dupe(u8, variant_def.css);
             },
             .dark_mode => {
-                // Dark mode uses a parent selector
-                if (rule.pseudo) |existing| {
-                    const combined = try std.fmt.allocPrint(
-                        self.allocator,
-                        ".dark {s}",
-                        .{existing},
-                    );
-                    self.allocator.free(existing);
-                    rule.pseudo = combined;
-                } else {
-                    rule.pseudo = try self.allocator.dupe(u8, ".dark ");
+                // Dark mode: use configured strategy
+                switch (self.dark_mode_strategy) {
+                    .@"class" => {
+                        // Class strategy: use parent selector
+                        const selector_prefix = try std.fmt.allocPrint(
+                            self.allocator,
+                            ".{s} ",
+                            .{self.dark_mode_selector},
+                        );
+                        defer self.allocator.free(selector_prefix);
+
+                        if (rule.pseudo) |existing| {
+                            const combined = try std.fmt.allocPrint(
+                                self.allocator,
+                                "{s}{s}",
+                                .{ selector_prefix, existing },
+                            );
+                            self.allocator.free(existing);
+                            rule.pseudo = combined;
+                        } else {
+                            rule.pseudo = try self.allocator.dupe(u8, selector_prefix);
+                        }
+                    },
+                    .media => {
+                        // Media strategy: use media query
+                        const media_query = "@media (prefers-color-scheme: dark)";
+                        if (rule.media) |existing| {
+                            // Already has a media query, would need to nest (complex, skip for now)
+                            self.allocator.free(existing);
+                        }
+                        rule.media = try self.allocator.dupe(u8, media_query);
+                    },
                 }
             },
             .group => {
@@ -564,6 +674,10 @@ pub const CSSGenerator = struct {
         return typography.generateFont(self, parsed, value);
     }
 
+    fn generateTextShadow(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return typography.generateTextShadow(self, parsed, value);
+    }
+
     fn generateBackground(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
         return colors.generateBackground(self, parsed, value);
     }
@@ -627,6 +741,38 @@ pub const CSSGenerator = struct {
 
     fn generateOrigin(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
         return transforms.generateOrigin(self, parsed, value);
+    }
+
+    fn generateTransformStyle(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transforms.generateTransformStyle(self, parsed, value);
+    }
+
+    fn generatePerspective(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transforms.generatePerspective(self, parsed, value);
+    }
+
+    fn generatePerspectiveOrigin(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transforms.generatePerspectiveOrigin(self, parsed, value);
+    }
+
+    fn generateBackfaceVisibility(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transforms.generateBackfaceVisibility(self, parsed, value);
+    }
+
+    fn generateAnimationIterationCount(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transforms.generateAnimationIterationCount(self, parsed, value);
+    }
+
+    fn generateAnimationDirection(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transforms.generateAnimationDirection(self, parsed, value);
+    }
+
+    fn generateAnimationFillMode(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transforms.generateAnimationFillMode(self, parsed, value);
+    }
+
+    fn generateAnimationPlayState(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return transforms.generateAnimationPlayState(self, parsed, value);
     }
 
     // Filter utilities
@@ -744,6 +890,137 @@ pub const CSSGenerator = struct {
 
     fn generateWillChange(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
         return interactivity.generateWillChange(self, parsed, value);
+    }
+
+    fn generateTouchAction(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return interactivity.generateTouchAction(self, parsed, value);
+    }
+
+    fn generateScrollMargin(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, side: ?[]const u8, value: ?[]const u8) !void {
+        return interactivity.generateScrollMargin(self, parsed, side, value);
+    }
+
+    fn generateScrollPadding(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, side: ?[]const u8, value: ?[]const u8) !void {
+        return interactivity.generateScrollPadding(self, parsed, side, value);
+    }
+
+    fn generateScrollSnapType(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return interactivity.generateScrollSnapType(self, parsed, value);
+    }
+
+    fn generateScrollSnapAlign(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return interactivity.generateScrollSnapAlign(self, parsed, value);
+    }
+
+    fn generateScrollSnapStop(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return interactivity.generateScrollSnapStop(self, parsed, value);
+    }
+
+    // Dispatchers for complex utility types
+    fn dispatchScrollUtility(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, utility_name: []const u8, value: ?[]const u8) !void {
+        // scroll-m-4 -> scroll-margin
+        // scroll-mx-4 -> scroll-margin-x
+        // scroll-p-4 -> scroll-padding
+        // scroll-px-4 -> scroll-padding-x
+        // scroll-auto/scroll-smooth -> scroll-behavior
+
+        if (std.mem.eql(u8, utility_name, "scroll-auto") or std.mem.eql(u8, utility_name, "scroll-smooth")) {
+            const behavior_value = if (std.mem.eql(u8, utility_name, "scroll-auto")) "auto" else "smooth";
+            return self.generateScrollBehavior(parsed, behavior_value);
+        } else if (std.mem.startsWith(u8, utility_name, "scroll-m")) {
+            // scroll-m-4, scroll-mx-4, scroll-mt-4, etc.
+            const rest = utility_name[8..]; // Skip "scroll-m"
+            if (rest.len == 0) {
+                return self.generateScrollMargin(parsed, null, value);
+            } else if (rest[0] == 'x' or rest[0] == 'y' or rest[0] == 't' or rest[0] == 'r' or rest[0] == 'b' or rest[0] == 'l') {
+                const side = rest[0..1];
+                return self.generateScrollMargin(parsed, side, value);
+            }
+        } else if (std.mem.startsWith(u8, utility_name, "scroll-p")) {
+            // scroll-p-4, scroll-px-4, scroll-pt-4, etc.
+            const rest = utility_name[8..]; // Skip "scroll-p"
+            if (rest.len == 0) {
+                return self.generateScrollPadding(parsed, null, value);
+            } else if (rest[0] == 'x' or rest[0] == 'y' or rest[0] == 't' or rest[0] == 'r' or rest[0] == 'b' or rest[0] == 'l') {
+                const side = rest[0..1];
+                return self.generateScrollPadding(parsed, side, value);
+            }
+        }
+    }
+
+    fn dispatchSnapUtility(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, utility_name: []const u8, _: ?[]const u8) !void {
+        // snap-x, snap-y, snap-both, snap-none -> scroll-snap-type
+        // snap-start, snap-center, snap-end -> scroll-snap-align
+        // snap-normal, snap-always -> scroll-snap-stop
+
+        if (std.mem.eql(u8, utility_name, "snap-none") or
+            std.mem.eql(u8, utility_name, "snap-x") or
+            std.mem.eql(u8, utility_name, "snap-y") or
+            std.mem.eql(u8, utility_name, "snap-both") or
+            std.mem.eql(u8, utility_name, "snap-mandatory") or
+            std.mem.eql(u8, utility_name, "snap-proximity")) {
+            const snap_value = utility_name[5..]; // Skip "snap-"
+            return self.generateScrollSnapType(parsed, snap_value);
+        } else if (std.mem.eql(u8, utility_name, "snap-start") or
+                   std.mem.eql(u8, utility_name, "snap-end") or
+                   std.mem.eql(u8, utility_name, "snap-center")) {
+            const align_value = utility_name[5..]; // Skip "snap-"
+            return self.generateScrollSnapAlign(parsed, align_value);
+        } else if (std.mem.eql(u8, utility_name, "snap-normal") or
+                   std.mem.eql(u8, utility_name, "snap-always")) {
+            const stop_value = utility_name[5..]; // Skip "snap-"
+            return self.generateScrollSnapStop(parsed, stop_value);
+        }
+    }
+
+    // Layout utility wrappers
+    fn generateContainer(self: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
+        const layout = @import("layout.zig");
+        return layout.generateContainer(self, parsed);
+    }
+
+    fn generateOverflowUtility(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, parts: anytype) !void {
+        const layout = @import("layout.zig");
+        // overflow-x-auto -> axis="x", value="auto"
+        // overflow-hidden -> axis=null, value="hidden"
+        if (parts.value) |val| {
+            if (std.mem.startsWith(u8, val, "x-")) {
+                return layout.generateOverflow(self, parsed, "x", val[2..]);
+            } else if (std.mem.startsWith(u8, val, "y-")) {
+                return layout.generateOverflow(self, parsed, "y", val[2..]);
+            } else {
+                return layout.generateOverflow(self, parsed, null, val);
+            }
+        }
+    }
+
+    fn generateVisibilityUtility(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: []const u8) !void {
+        const layout = @import("layout.zig");
+        return layout.generateVisibility(self, parsed, value);
+    }
+
+    fn generateZIndexUtility(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        const layout = @import("layout.zig");
+        return layout.generateZIndex(self, parsed, value);
+    }
+
+    fn generateIsolationUtility(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: []const u8) !void {
+        const layout = @import("layout.zig");
+        return layout.generateIsolation(self, parsed, value);
+    }
+
+    fn generateObjectUtility(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, parts: anytype) !void {
+        const layout = @import("layout.zig");
+        // object-cover, object-contain, object-fill, etc.
+        // object-center, object-top, etc.
+        if (parts.value) |val| {
+            if (std.mem.eql(u8, val, "cover") or std.mem.eql(u8, val, "contain") or
+                std.mem.eql(u8, val, "fill") or std.mem.eql(u8, val, "none") or std.mem.eql(u8, val, "scale-down")) {
+                return layout.generateObjectFit(self, parsed, val);
+            } else {
+                return layout.generateObjectPosition(self, parsed, val);
+            }
+        }
     }
 };
 

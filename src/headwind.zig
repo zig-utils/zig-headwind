@@ -202,7 +202,15 @@ pub const Headwind = struct {
         try css.append("@layer utilities {\n");
         try css.append("  /* Utilities */\n");
 
-        var generator = CSSGenerator.init(self.allocator);
+        // Configure CSS generator with dark mode settings
+        const generator_config = CSSGenerator.Config{
+            .dark_mode_selector = self.config.darkMode.className,
+            .dark_mode_strategy = switch (self.config.darkMode.strategy) {
+                .@"class", .selector => .@"class",
+                .media => .media,
+            },
+        };
+        var generator = CSSGenerator.initWithConfig(self.allocator, generator_config);
         defer generator.deinit();
 
         for (classes) |class| {

@@ -2,6 +2,110 @@
 
 A high-performance Tailwind CSS alternative built with Zig, targeting feature parity with Tailwind 4.1.
 
+## 🎉 Recently Completed (Session 2025-10-24)
+
+### CLI & Build System
+- ✅ Implemented full CLI with commands: init, build, watch (stub), check, clean, info, help, version
+- ✅ Added command-line argument parsing with options support
+- ✅ Created user-friendly help and error messages
+- ✅ Implemented verbose and quiet modes
+
+### Dark Mode Support (COMPLETED)
+- ✅ **Full dark mode implementation with configurable strategies**
+- ✅ Class strategy: `.dark` parent selector (default)
+- ✅ Media query strategy: `@media (prefers-color-scheme: dark)`
+- ✅ Configurable dark mode class name in config
+- ✅ Works with all utility classes (e.g., `dark:bg-black`, `dark:text-white`)
+- ✅ Supports combined variants (e.g., `dark:hover:bg-gray-800`)
+
+### Core Architecture
+- ✅ Cascade layers (@layer base, components, utilities) fully integrated
+- ✅ CSS custom properties (CSS variables) for theme values
+- ✅ Responsive breakpoints (sm, md, lg, xl, 2xl) with min-width and max-width variants
+- ✅ Plugin system architecture with base, components, and utilities layers
+
+### What's Working Now
+- Full CSS generation pipeline with layers
+- File scanning and class extraction
+- Configuration loading
+- Plugin system with typography and forms plugins
+- Minification support
+- Complete variant system (pseudo-classes, pseudo-elements, media queries)
+- Extensive utility coverage (spacing, typography, colors, layout, flexbox, grid, sizing, borders, backgrounds, shadows, transforms, filters, transitions, animations, interactivity)
+
+## 🎯 HIGH PRIORITY - Next Implementation Tasks
+
+### Phase A: Essential Missing Features (Highest Priority)
+1. ~~**Dark Mode Support**~~ - ✅ COMPLETED
+   - ✅ Implement `dark:` variant with class strategy (.dark parent)
+   - ✅ Add media query strategy (@media (prefers-color-scheme: dark))
+   - ✅ Support configurable dark mode selector
+
+2. **Watch Mode** - Essential for development workflow
+   - [ ] Implement file watcher (FSEvents for macOS, inotify for Linux)
+   - [ ] Add debouncing for rapid file changes
+   - [ ] Incremental rebuild on file changes
+   - [ ] Live reload integration hooks
+
+3. **Remaining Core Layout Utilities**
+   - [ ] Container utilities with breakpoints
+   - [ ] Overflow utilities (overflow-x/y variants)
+   - [ ] Visibility utilities (visible, invisible, collapse)
+   - [ ] Z-index utilities
+   - [ ] Object-fit and object-position
+   - [ ] Isolation utilities
+
+4. **Background Utilities (Remaining)**
+   - [ ] Background attachment (bg-fixed, bg-local, bg-scroll)
+   - [ ] Background clip (bg-clip-text, etc.)
+   - [ ] Background position utilities
+   - [ ] Background repeat utilities
+   - [ ] Background size utilities
+   - [ ] Background image gradients
+
+### Phase B: Advanced Features (Medium Priority)
+5. **Group & Peer Variants** - Common pattern for interactive UIs
+   - [ ] Implement group variant (group-hover, group-focus, etc.)
+   - [ ] Named groups support (group/name)
+   - [ ] Peer variant implementation
+   - [ ] Named peer support
+
+6. **Container Queries** - Modern CSS feature
+   - [ ] @container rule generation
+   - [ ] container-type utilities
+   - [ ] Container query variants (@sm, @md, @lg, etc.)
+   - [ ] Named container queries
+
+7. **Modern CSS Enhancements**
+   - [ ] OKLCH color space support
+   - [ ] color-mix() function support
+   - ✅ Scroll utilities (scroll-margin, scroll-padding, scroll-snap-*, touch-action) - COMPLETED
+   - ✅ Additional transform utilities (perspective, transform-style, backface-visibility) - COMPLETED
+   - ✅ Text-shadow utilities - COMPLETED
+   - ✅ Custom animation properties (iteration-count, direction, fill-mode, play-state) - COMPLETED
+
+### Phase C: Advanced Directives & Tooling (Lower Priority)
+8. **CSS Directives**
+   - [ ] @utility directive for custom utilities
+   - [ ] @variant directive for custom variants
+   - [ ] @source directive for content paths
+   - [ ] @import directive with proper resolution
+   - [ ] @plugin directive for plugin loading
+   - [ ] @config directive for inline configuration
+
+9. **Performance Optimizations**
+   - [ ] Multi-threading for parallel file scanning
+   - [ ] Lock-free data structures for cache
+   - [ ] SIMD optimizations for string scanning
+   - [ ] Memory pool allocators
+
+10. **Developer Experience**
+    - [ ] Source maps generation
+    - [ ] Better error messages with suggestions
+    - [ ] VS Code extension skeleton
+    - [ ] Documentation site
+    - [ ] Example projects
+
 ---
 
 ## Phase 1: Project Setup & Core Architecture

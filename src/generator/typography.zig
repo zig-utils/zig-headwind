@@ -98,3 +98,26 @@ pub fn generateFont(generator: *CSSGenerator, parsed: *const class_parser.Parsed
 
     try generator.rules.append(generator.allocator, rule);
 }
+
+/// Text shadow utilities
+pub fn generateTextShadow(
+    generator: *CSSGenerator,
+    parsed: *const class_parser.ParsedClass,
+    value: ?[]const u8,
+) !void {
+    const text_shadow_map = std.StaticStringMap([]const u8).initComptime(.{
+        .{ "sm", "0 1px 2px rgb(0 0 0 / 0.05)" },
+        .{ "", "0 1px 3px rgb(0 0 0 / 0.1), 0 1px 2px rgb(0 0 0 / 0.06)" },
+        .{ "md", "0 4px 6px rgb(0 0 0 / 0.1), 0 2px 4px rgb(0 0 0 / 0.06)" },
+        .{ "lg", "0 10px 15px rgb(0 0 0 / 0.1), 0 4px 6px rgb(0 0 0 / 0.05)" },
+        .{ "xl", "0 20px 25px rgb(0 0 0 / 0.1), 0 8px 10px rgb(0 0 0 / 0.04)" },
+        .{ "2xl", "0 25px 50px rgb(0 0 0 / 0.25)" },
+        .{ "none", "none" },
+    });
+
+    const shadow_value = text_shadow_map.get(value orelse "") orelse return;
+
+    var rule = try generator.createRule(parsed);
+    try rule.addDeclaration(generator.allocator, "text-shadow", shadow_value);
+    try generator.rules.append(generator.allocator, rule);
+}
