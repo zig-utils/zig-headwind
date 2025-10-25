@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Container Query Test</title>
+</head>
+<body>
+    <!-- Container with container queries -->
+    <div class="container">
+        <div class="@md:text-lg @lg:text-xl @2xl:text-2xl">
+            Responsive to container size
+        </div>
+        <div class="@sm:p-4 @md:p-8 @lg:p-12">
+            Padding changes with container size
+        </div>
+    </div>
+
+    <!-- Nested: responsive + container query -->
+    <div class="md:@lg:text-3xl">
+        Large on medium screens AND large containers
+    </div>
+</body>
+</html>

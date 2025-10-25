@@ -114,6 +114,20 @@ pub const max_breakpoints = std.StaticStringMap([]const u8).initComptime(.{
     .{ "max-2xl", "@media (max-width: 1535px)" },
 });
 
+/// Container query breakpoints (using @ prefix like Tailwind)
+pub const container_breakpoints = std.StaticStringMap([]const u8).initComptime(.{
+    .{ "@sm", "@container (min-width: 640px)" },
+    .{ "@md", "@container (min-width: 768px)" },
+    .{ "@lg", "@container (min-width: 1024px)" },
+    .{ "@xl", "@container (min-width: 1280px)" },
+    .{ "@2xl", "@container (min-width: 1536px)" },
+    .{ "@3xl", "@container (min-width: 1792px)" },
+    .{ "@4xl", "@container (min-width: 2048px)" },
+    .{ "@5xl", "@container (min-width: 2560px)" },
+    .{ "@6xl", "@container (min-width: 3072px)" },
+    .{ "@7xl", "@container (min-width: 3584px)" },
+});
+
 /// ARIA attribute variants
 pub const aria_variants = [_][]const u8{
     "aria-checked",
@@ -188,6 +202,15 @@ pub fn getVariantCSS(variant: []const u8) ?VariantDef {
             .name = "dark",
             .type = .dark_mode,
             .css = ".dark", // Will be used as parent selector
+        };
+    }
+
+    // Check for container query breakpoints
+    if (container_breakpoints.get(variant)) |css| {
+        return VariantDef{
+            .name = variant,
+            .type = .container,
+            .css = css,
         };
     }
 

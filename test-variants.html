@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Group and Peer Variant Test</title>
+</head>
+<body>
+    <!-- Group variant tests -->
+    <div class="group p-4 border">
+        <p class="group-hover:text-blue-500">Hover the parent to make me blue</p>
+        <button class="group-focus:bg-red-500">Focus parent to make me red</button>
+    </div>
+
+    <!-- Peer variant tests -->
+    <div class="mt-4">
+        <input type="checkbox" class="peer" id="test-checkbox">
+        <label for="test-checkbox" class="peer-checked:text-green-500 peer-checked:font-bold">
+            Check the box to style me
+        </label>
+    </div>
+
+    <div class="mt-4">
+        <input type="text" class="peer" placeholder="Focus me">
+        <p class="peer-focus:text-purple-500">Input focused!</p>
+    </div>
+</body>
+</html>

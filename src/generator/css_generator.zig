@@ -8,7 +8,9 @@ pub const CSSRule = struct {
     selector: []const u8,
     declarations: std.StringHashMap([]const u8),
     media: ?[]const u8 = null,
+    container: ?[]const u8 = null, // For container queries
     pseudo: ?[]const u8 = null,
+    parent_selector: ?[]const u8 = null, // For group/peer variants
     is_important: bool = false,
 
     pub fn init(allocator: std.mem.Allocator, selector: []const u8) !CSSRule {
@@ -27,7 +29,9 @@ pub const CSSRule = struct {
         }
         self.declarations.deinit();
         if (self.media) |m| allocator.free(m);
+        if (self.container) |c| allocator.free(c);
         if (self.pseudo) |p| allocator.free(p);
+        if (self.parent_selector) |ps| allocator.free(ps);
     }
 
     pub fn addDeclaration(self: *CSSRule, allocator: std.mem.Allocator, property: []const u8, value: []const u8) !void {
@@ -40,15 +44,24 @@ pub const CSSRule = struct {
         var result = string_utils.StringBuilder.init(allocator);
         errdefer result.deinit();
 
-        // Build selector with pseudo-classes
-        const full_selector = if (self.pseudo) |pseudo| blk: {
+        // Build selector with parent selector (for group/peer) and pseudo-classes
+        const full_selector = if (self.parent_selector) |parent| blk: {
+            var sel = string_utils.StringBuilder.init(allocator);
+            defer sel.deinit();
+            try sel.append(parent);
+            try sel.append(self.selector);
+            if (self.pseudo) |pseudo| {
+                try sel.append(pseudo);
+            }
+            break :blk try sel.toOwnedSlice();
+        } else if (self.pseudo) |pseudo| blk: {
             var sel = string_utils.StringBuilder.init(allocator);
             defer sel.deinit();
             try sel.append(self.selector);
             try sel.append(pseudo);
             break :blk try sel.toOwnedSlice();
         } else try allocator.dupe(u8, self.selector);
-        defer if (self.pseudo != null) allocator.free(full_selector);
+        defer if (self.pseudo != null or self.parent_selector != null) allocator.free(full_selector);
 
         // Wrap in media query if needed
         if (self.media) |media| {
@@ -56,7 +69,16 @@ pub const CSSRule = struct {
             try result.append(" {\n  ");
         }
 
+        // Wrap in container query if needed (can be nested with media)
+        if (self.container) |container| {
+            if (self.media != null) try result.append("  "); // Indent for nested query
+            try result.append(container);
+            try result.append(" {\n  ");
+            if (self.media != null) try result.append("  "); // Extra indent for double nesting
+        }
+
         // Selector
+        if (self.container != null and self.media != null) try result.append("  "); // Extra indent
         try result.append(full_selector);
         try result.append(" { ");
 
@@ -74,6 +96,14 @@ pub const CSSRule = struct {
 
         try result.append(" }");
 
+        // Close container query wrapper
+        if (self.container) |_| {
+            try result.append("\n");
+            if (self.media != null) try result.append("  "); // Indent for nested query
+            try result.append("}");
+        }
+
+        // Close media query wrapper
         if (self.media) |_| {
             try result.append("\n}");
         }
@@ -226,6 +256,28 @@ pub const CSSGenerator = struct {
                     // bg-color-mix-[in_srgb,_blue_50%,_red]
                     const mix_value = val[10..]; // Skip "color-mix-"
                     try self.generateColorMixBackground(parsed, mix_value);
+                } else if (std.mem.startsWith(u8, val, "fixed") or std.mem.startsWith(u8, val, "local") or std.mem.startsWith(u8, val, "scroll")) {
+                    // bg-fixed, bg-local, bg-scroll
+                    try self.generateBackgroundAttachment(parsed, val);
+                } else if (std.mem.startsWith(u8, val, "clip-")) {
+                    // bg-clip-border, bg-clip-padding, bg-clip-content, bg-clip-text
+                    const clip_value = val[5..]; // Skip "clip-"
+                    try self.generateBackgroundClip(parsed, clip_value);
+                } else if (std.mem.startsWith(u8, val, "origin-")) {
+                    // bg-origin-border, bg-origin-padding, bg-origin-content
+                    const origin_value = val[7..]; // Skip "origin-"
+                    try self.generateBackgroundOrigin(parsed, origin_value);
+                } else if (std.mem.startsWith(u8, val, "repeat") or std.mem.startsWith(u8, val, "no-repeat")) {
+                    // bg-repeat, bg-no-repeat, bg-repeat-x, bg-repeat-y, bg-repeat-round, bg-repeat-space
+                    try self.generateBackgroundRepeat(parsed, val);
+                } else if (std.mem.startsWith(u8, val, "auto") or std.mem.startsWith(u8, val, "cover") or std.mem.startsWith(u8, val, "contain")) {
+                    // bg-auto, bg-cover, bg-contain
+                    try self.generateBackgroundSize(parsed, val);
+                } else if (std.mem.startsWith(u8, val, "bottom") or std.mem.startsWith(u8, val, "center") or
+                           std.mem.startsWith(u8, val, "left") or std.mem.startsWith(u8, val, "right") or
+                           std.mem.startsWith(u8, val, "top")) {
+                    // bg-bottom, bg-center, bg-left, bg-left-bottom, bg-left-top, bg-right, etc.
+                    try self.generateBackgroundPosition(parsed, val);
                 } else {
                     try self.generateBackground(parsed, utility_parts.value);
                 }
@@ -429,7 +481,7 @@ pub const CSSGenerator = struct {
             try self.applyVariant(&rule, variant);
         }
 
-        try self.rules.append(self.allocator, rule);
+        // Don't append to self.rules here - let the caller do it
         return rule;
     }
 
@@ -475,6 +527,14 @@ pub const CSSGenerator = struct {
                 }
                 rule.media = try self.allocator.dupe(u8, variant_def.css);
             },
+            .container => {
+                // Container queries wrap the entire rule (can be nested with media queries)
+                if (rule.container) |existing| {
+                    // For now, just use the new one
+                    self.allocator.free(existing);
+                }
+                rule.container = try self.allocator.dupe(u8, variant_def.css);
+            },
             .dark_mode => {
                 // Dark mode: use configured strategy
                 switch (self.dark_mode_strategy) {
@@ -519,17 +579,17 @@ pub const CSSGenerator = struct {
                         ".group{s} ",
                         .{pseudo},
                     );
-                    if (rule.pseudo) |existing| {
+                    if (rule.parent_selector) |existing| {
                         const combined = try std.fmt.allocPrint(
                             self.allocator,
                             "{s}{s}",
-                            .{ group_selector, existing },
+                            .{ existing, group_selector },
                         );
                         self.allocator.free(group_selector);
                         self.allocator.free(existing);
-                        rule.pseudo = combined;
+                        rule.parent_selector = combined;
                     } else {
-                        rule.pseudo = group_selector;
+                        rule.parent_selector = group_selector;
                     }
                 }
             },
@@ -542,17 +602,17 @@ pub const CSSGenerator = struct {
                         ".peer{s} ~ ",
                         .{pseudo},
                     );
-                    if (rule.pseudo) |existing| {
+                    if (rule.parent_selector) |existing| {
                         const combined = try std.fmt.allocPrint(
                             self.allocator,
                             "{s}{s}",
-                            .{ peer_selector, existing },
+                            .{ existing, peer_selector },
                         );
                         self.allocator.free(peer_selector);
                         self.allocator.free(existing);
-                        rule.pseudo = combined;
+                        rule.parent_selector = combined;
                     } else {
-                        rule.pseudo = peer_selector;
+                        rule.parent_selector = peer_selector;
                     }
                 }
             },
@@ -576,7 +636,7 @@ pub const CSSGenerator = struct {
                     rule.pseudo = attr_selector;
                 }
             },
-            .state, .container => {
+            .state => {
                 // Not yet implemented
             },
         }
@@ -710,6 +770,37 @@ pub const CSSGenerator = struct {
 
     fn generateBackground(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
         return colors.generateBackground(self, parsed, value);
+    }
+
+    // Background utilities
+    fn generateBackgroundAttachment(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        const backgrounds = @import("backgrounds.zig");
+        return backgrounds.generateBackgroundAttachment(self, parsed, value);
+    }
+
+    fn generateBackgroundClip(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        const backgrounds = @import("backgrounds.zig");
+        return backgrounds.generateBackgroundClip(self, parsed, value);
+    }
+
+    fn generateBackgroundOrigin(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        const backgrounds = @import("backgrounds.zig");
+        return backgrounds.generateBackgroundOrigin(self, parsed, value);
+    }
+
+    fn generateBackgroundPosition(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        const backgrounds = @import("backgrounds.zig");
+        return backgrounds.generateBackgroundPosition(self, parsed, value);
+    }
+
+    fn generateBackgroundRepeat(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        const backgrounds = @import("backgrounds.zig");
+        return backgrounds.generateBackgroundRepeat(self, parsed, value);
+    }
+
+    fn generateBackgroundSize(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        const backgrounds = @import("backgrounds.zig");
+        return backgrounds.generateBackgroundSize(self, parsed, value);
     }
 
     // Modern color functions

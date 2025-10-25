@@ -42,10 +42,10 @@ A high-performance Tailwind CSS alternative built with Zig, targeting feature pa
    - ✅ Support configurable dark mode selector
 
 2. **Watch Mode** - Essential for development workflow
-   - [ ] Implement file watcher (FSEvents for macOS, inotify for Linux)
-   - [ ] Add debouncing for rapid file changes
-   - [ ] Incremental rebuild on file changes
-   - [ ] Live reload integration hooks
+   - ✅ Implement file watcher (FSEvents for macOS, inotify for Linux) - COMPLETED (with polling fallback)
+   - ✅ Add debouncing for rapid file changes - COMPLETED (300ms debounce)
+   - ✅ Incremental rebuild on file changes - COMPLETED
+   - ✅ Live reload integration hooks - COMPLETED (watch command available)
 
 3. **Remaining Core Layout Utilities**
    - [ ] Container utilities with breakpoints
@@ -56,26 +56,27 @@ A high-performance Tailwind CSS alternative built with Zig, targeting feature pa
    - [ ] Isolation utilities
 
 4. **Background Utilities (Remaining)**
-   - [ ] Background attachment (bg-fixed, bg-local, bg-scroll)
-   - [ ] Background clip (bg-clip-text, etc.)
-   - [ ] Background position utilities
-   - [ ] Background repeat utilities
-   - [ ] Background size utilities
-   - [ ] Background image gradients
+   - ✅ Background attachment (bg-fixed, bg-local, bg-scroll) - COMPLETED
+   - ✅ Background clip (bg-clip-border, bg-clip-padding, bg-clip-content, bg-clip-text) - COMPLETED
+   - ✅ Background origin (bg-origin-border, bg-origin-padding, bg-origin-content) - COMPLETED
+   - ✅ Background position utilities (bg-center, bg-top, bg-bottom, bg-left, bg-right, etc.) - COMPLETED
+   - ✅ Background repeat utilities (bg-repeat, bg-no-repeat, bg-repeat-x, bg-repeat-y, bg-repeat-round, bg-repeat-space) - COMPLETED
+   - ✅ Background size utilities (bg-auto, bg-cover, bg-contain) - COMPLETED
+   - ✅ Background image gradients (already implemented via gradients.zig) - COMPLETED
 
 ### Phase B: Advanced Features (Medium Priority)
 5. **Group & Peer Variants** - Common pattern for interactive UIs
-   - [ ] Implement group variant (group-hover, group-focus, etc.)
+   - ✅ Implement group variant (group-hover, group-focus, etc.) - COMPLETED
    - [ ] Named groups support (group/name)
-   - [ ] Peer variant implementation
+   - ✅ Peer variant implementation - COMPLETED (peer-checked, peer-focus, etc.)
    - [ ] Named peer support
 
 6. **Container Queries** - Modern CSS feature
    - ✅ container-type utilities (container-type-normal, container-type-size, container-type-inline-size) - COMPLETED
    - ✅ container-name utilities for named containers - COMPLETED
    - ✅ Combined container utility (container, container-normal, container-size) - COMPLETED
-   - [ ] @container rule generation (requires variant system enhancement)
-   - [ ] Container query variants (@sm, @md, @lg, etc.) (requires variant system enhancement)
+   - ✅ @container rule generation - COMPLETED
+   - ✅ Container query variants (@sm, @md, @lg, @xl, @2xl, @3xl, @4xl, @5xl, @6xl, @7xl) - COMPLETED
 
 7. **Modern CSS Enhancements**
    - ✅ OKLCH color space support - COMPLETED (bg-oklch-[...], text-oklch-[...])
