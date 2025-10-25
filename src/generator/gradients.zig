@@ -26,9 +26,10 @@ pub fn generateBackgroundGradient(
     const direction = gradient_directions.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
-    try rule.addDeclaration(generator.allocator, "background-image", try std.fmt.allocPrint(
+    errdefer rule.deinit(generator.allocator);
+    try rule.addDeclarationOwned(generator.allocator, "background-image", try std.fmt.allocPrint(
         generator.allocator,
-        "linear-gradient({s}, var(--tw-gradient-stops))",
+        "linear-gradient({s}, var(--hw-gradient-stops))",
         .{direction},
     ));
     try generator.rules.append(generator.allocator, rule);
@@ -47,22 +48,23 @@ pub fn generateGradientFrom(
     const color_value = colors_module.getColorValue(color_info.color, color_info.shade) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
 
     // Set CSS variable for gradient start
     try rule.addDeclaration(
         generator.allocator,
-        "--tw-gradient-from",
+        "--hw-gradient-from",
         color_value,
     );
     try rule.addDeclaration(
         generator.allocator,
-        "--tw-gradient-to",
+        "--hw-gradient-to",
         "transparent",
     );
     try rule.addDeclaration(
         generator.allocator,
-        "--tw-gradient-stops",
-        "var(--tw-gradient-from), var(--tw-gradient-to)",
+        "--hw-gradient-stops",
+        "var(--hw-gradient-from), var(--hw-gradient-to)",
     );
 
     try generator.rules.append(generator.allocator, rule);
@@ -81,13 +83,14 @@ pub fn generateGradientVia(
     const color_value = colors_module.getColorValue(color_info.color, color_info.shade) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
 
-    try rule.addDeclaration(
+    try rule.addDeclarationOwned(
         generator.allocator,
-        "--tw-gradient-stops",
+        "--hw-gradient-stops",
         try std.fmt.allocPrint(
             generator.allocator,
-            "var(--tw-gradient-from), {s}, var(--tw-gradient-to)",
+            "var(--hw-gradient-from), {s}, var(--hw-gradient-to)",
             .{color_value},
         ),
     );
@@ -108,10 +111,11 @@ pub fn generateGradientTo(
     const color_value = colors_module.getColorValue(color_info.color, color_info.shade) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
 
     try rule.addDeclaration(
         generator.allocator,
-        "--tw-gradient-to",
+        "--hw-gradient-to",
         color_value,
     );
 
@@ -127,10 +131,11 @@ pub fn generateRadialGradient(
     _ = value;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(
         generator.allocator,
         "background-image",
-        "radial-gradient(circle, var(--tw-gradient-stops))",
+        "radial-gradient(circle, var(--hw-gradient-stops))",
     );
     try generator.rules.append(generator.allocator, rule);
 }
@@ -144,10 +149,11 @@ pub fn generateConicGradient(
     _ = value;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(
         generator.allocator,
         "background-image",
-        "conic-gradient(from 0deg, var(--tw-gradient-stops))",
+        "conic-gradient(from 0deg, var(--hw-gradient-stops))",
     );
     try generator.rules.append(generator.allocator, rule);
 }

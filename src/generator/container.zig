@@ -17,6 +17,7 @@ pub fn generateContainerType(
     const type_value = container_type_map.get(value orelse "inline-size") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "container-type", type_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -30,6 +31,7 @@ pub fn generateContainerName(
     if (value == null) return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "container-name", value.?);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -53,6 +55,7 @@ pub fn generateContainer(
     const type_value = container_type_map.get(value orelse "") orelse "inline-size";
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "container-type", type_value);
     try generator.rules.append(generator.allocator, rule);
 }

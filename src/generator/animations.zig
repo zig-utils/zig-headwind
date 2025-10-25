@@ -23,6 +23,7 @@ pub fn generateAnimate(
     const animation_value = animation_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "animation", animation_value);
     try generator.rules.append(generator.allocator, rule);
 }

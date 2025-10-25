@@ -212,6 +212,15 @@ pub const FileCache = struct {
 test "FileCache basic operations" {
     const allocator = std.testing.allocator;
     const cache_dir = ".test-cache";
+    const test_file = "test-cache-file.html";
+
+    // Create a temporary test file
+    {
+        const file = try std.fs.cwd().createFile(test_file, .{});
+        defer file.close();
+        try file.writeAll("<div class=\"flex items-center bg-blue-500\">Test</div>");
+    }
+    defer std.fs.cwd().deleteFile(test_file) catch {};
 
     var cache = FileCache.init(allocator, cache_dir);
     defer cache.deinit();
@@ -225,10 +234,10 @@ test "FileCache basic operations" {
     test_classes[2] = "bg-blue-500";
 
     // Put classes
-    try cache.put("test.html", test_classes);
+    try cache.put(test_file, test_classes);
 
     // Get classes (should be cache hit)
-    const retrieved = try cache.get("test.html");
+    const retrieved = try cache.get(test_file);
     if (retrieved) |classes| {
         defer {
             for (classes) |class| allocator.free(class);

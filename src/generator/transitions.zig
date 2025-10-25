@@ -60,6 +60,7 @@ pub fn generateTransition(
         transition_property_values.get("") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "transition-property", transition_value);
     try rule.addDeclaration(generator.allocator, "transition-timing-function", "cubic-bezier(0.4, 0, 0.2, 1)");
     try rule.addDeclaration(generator.allocator, "transition-duration", "150ms");
@@ -77,6 +78,7 @@ pub fn generateDuration(
     const duration_value = duration_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "transition-duration", duration_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -92,6 +94,7 @@ pub fn generateEase(
     const timing_value = timing_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "transition-timing-function", timing_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -107,6 +110,7 @@ pub fn generateDelay(
     const delay_value = delay_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "transition-delay", delay_value);
     try generator.rules.append(generator.allocator, rule);
 }

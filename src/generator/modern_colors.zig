@@ -36,6 +36,7 @@ pub fn generateOklchColor(
     try color_value.append(generator.allocator, ')');
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(
         generator.allocator,
         property,
@@ -72,6 +73,7 @@ pub fn generateColorMix(
     try color_value.append(generator.allocator, ')');
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(
         generator.allocator,
         property,
@@ -144,6 +146,7 @@ pub fn generateRgbColor(
     try color_value.append(generator.allocator, ')');
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(
         generator.allocator,
         property,
@@ -178,6 +181,7 @@ pub fn generateHslColor(
     try color_value.append(generator.allocator, ')');
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(
         generator.allocator,
         property,

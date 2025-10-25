@@ -331,10 +331,11 @@ test "parseClass: named group" {
     defer parsed.deinit(allocator);
 
     try std.testing.expectEqual(@as(usize, 1), parsed.variants.len);
-    try std.testing.expectEqualStrings("group/sidebar-hover", parsed.variants[0].variant);
-    if (std.mem.indexOf(u8, parsed.variants[0].variant, "/")) |slash_pos| {
-        const group_name = parsed.variants[0].variant[slash_pos + 1 ..];
-        try std.testing.expect(std.mem.indexOf(u8, group_name, "sidebar") != null);
+    // The parser splits "group/sidebar-hover" into variant="group" and name="sidebar-hover"
+    try std.testing.expectEqualStrings("group", parsed.variants[0].variant);
+    try std.testing.expect(parsed.variants[0].name != null);
+    if (parsed.variants[0].name) |name| {
+        try std.testing.expectEqualStrings("sidebar-hover", name);
     }
 }
 

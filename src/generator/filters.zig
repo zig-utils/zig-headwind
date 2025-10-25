@@ -101,6 +101,7 @@ pub fn generateBlur(
         blur_values.get("") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "filter", try std.fmt.allocPrint(
         generator.allocator,
         "blur({s})",
@@ -120,6 +121,7 @@ pub fn generateBrightness(
     const brightness_value = brightness_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "filter", try std.fmt.allocPrint(
         generator.allocator,
         "brightness({s})",
@@ -139,6 +141,7 @@ pub fn generateContrast(
     const contrast_value = contrast_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "filter", try std.fmt.allocPrint(
         generator.allocator,
         "contrast({s})",
@@ -159,6 +162,7 @@ pub fn generateGrayscale(
         grayscale_values.get("") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "filter", try std.fmt.allocPrint(
         generator.allocator,
         "grayscale({s})",
@@ -178,6 +182,7 @@ pub fn generateHueRotate(
     const hue_value = hue_rotate_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "filter", try std.fmt.allocPrint(
         generator.allocator,
         "hue-rotate({s})",
@@ -198,6 +203,7 @@ pub fn generateInvert(
         invert_values.get("") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "filter", try std.fmt.allocPrint(
         generator.allocator,
         "invert({s})",
@@ -217,6 +223,7 @@ pub fn generateSaturate(
     const saturate_value = saturate_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "filter", try std.fmt.allocPrint(
         generator.allocator,
         "saturate({s})",
@@ -237,6 +244,7 @@ pub fn generateSepia(
         sepia_values.get("") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "filter", try std.fmt.allocPrint(
         generator.allocator,
         "sepia({s})",
@@ -257,6 +265,7 @@ pub fn generateDropShadow(
         drop_shadow_values.get("") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "filter", try std.fmt.allocPrint(
         generator.allocator,
         "drop-shadow({s})",
@@ -277,6 +286,7 @@ pub fn generateBackdropBlur(
         blur_values.get("") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "backdrop-filter", try std.fmt.allocPrint(
         generator.allocator,
         "blur({s})",
@@ -296,6 +306,7 @@ pub fn generateBackdropBrightness(
     const brightness_value = brightness_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "backdrop-filter", try std.fmt.allocPrint(
         generator.allocator,
         "brightness({s})",
@@ -315,6 +326,7 @@ pub fn generateBackdropContrast(
     const contrast_value = contrast_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "backdrop-filter", try std.fmt.allocPrint(
         generator.allocator,
         "contrast({s})",
@@ -335,6 +347,7 @@ pub fn generateBackdropGrayscale(
         grayscale_values.get("") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "backdrop-filter", try std.fmt.allocPrint(
         generator.allocator,
         "grayscale({s})",

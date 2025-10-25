@@ -17,6 +17,7 @@ pub fn generateBackgroundAttachment(
     const attachment_value = attachment_map.get(value orelse "scroll") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "background-attachment", attachment_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -37,6 +38,7 @@ pub fn generateBackgroundClip(
     const clip_value = clip_map.get(value orelse "border") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "background-clip", clip_value);
     // Add -webkit-background-clip for text clipping (needed for Safari)
     if (std.mem.eql(u8, clip_value, "text")) {
@@ -61,6 +63,7 @@ pub fn generateBackgroundOrigin(
     const origin_value = origin_map.get(value orelse "padding") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "background-origin", origin_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -86,6 +89,7 @@ pub fn generateBackgroundPosition(
     const position_value = position_map.get(value orelse "center") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "background-position", position_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -108,6 +112,7 @@ pub fn generateBackgroundRepeat(
     const repeat_value = repeat_map.get(value orelse "repeat") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "background-repeat", repeat_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -127,6 +132,7 @@ pub fn generateBackgroundSize(
     const size_value = size_map.get(value orelse "auto") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "background-size", size_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -141,6 +147,7 @@ pub fn generateBackgroundImage(
     if (value == null) return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "background-image", value.?);
     try generator.rules.append(generator.allocator, rule);
 }

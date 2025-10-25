@@ -53,6 +53,8 @@ pub fn generatePadding(generator: *CSSGenerator, parsed: *const class_parser.Par
         spacing_scale.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
+    errdefer rule.deinit(generator.allocator);
 
     // Extract utility name (before brackets if arbitrary)
     const utility = parsed.utility;
@@ -84,6 +86,7 @@ pub fn generatePadding(generator: *CSSGenerator, parsed: *const class_parser.Par
     } else if (std.mem.startsWith(u8, utility_name, "pl")) {
         try rule.addDeclaration(generator.allocator, "padding-left", spacing_value);
     } else {
+        rule.deinit(generator.allocator);
         return;
     }
 
@@ -119,6 +122,7 @@ pub fn generateMargin(generator: *CSSGenerator, parsed: *const class_parser.Pars
     defer if (is_negative and final_value.ptr != spacing_value.ptr) generator.allocator.free(final_value);
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
 
     // Extract utility name (before brackets if arbitrary), removing leading minus
     const utility_name = if (parsed.is_arbitrary) blk: {
@@ -171,6 +175,7 @@ pub fn generateGap(generator: *CSSGenerator, parsed: *const class_parser.ParsedC
         spacing_scale.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
 
     // Extract utility name (before brackets if arbitrary)
     const utility = parsed.utility;
@@ -189,6 +194,7 @@ pub fn generateGap(generator: *CSSGenerator, parsed: *const class_parser.ParsedC
     } else if (std.mem.startsWith(u8, utility_name, "gap-y")) {
         try rule.addDeclaration(generator.allocator, "row-gap", spacing_value);
     } else {
+        rule.deinit(generator.allocator);
         return;
     }
 

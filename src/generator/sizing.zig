@@ -49,6 +49,7 @@ pub fn generateWidth(generator: *CSSGenerator, parsed: *const class_parser.Parse
         getSizingValue(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "width", css_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -64,6 +65,7 @@ pub fn generateHeight(generator: *CSSGenerator, parsed: *const class_parser.Pars
         getSizingValue(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "height", css_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -79,6 +81,7 @@ pub fn generateMinWidth(generator: *CSSGenerator, parsed: *const class_parser.Pa
         getSizingValue(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "min-width", css_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -94,6 +97,7 @@ pub fn generateMaxWidth(generator: *CSSGenerator, parsed: *const class_parser.Pa
         getSizingValue(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "max-width", css_value);
     try generator.rules.append(generator.allocator, rule);
 }

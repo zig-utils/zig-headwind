@@ -32,6 +32,7 @@ pub fn generateBorder(generator: *CSSGenerator, parsed: *const class_parser.Pars
     const border_width = border_widths.get(val) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
 
     const utility = parsed.utility;
     if (std.mem.eql(u8, utility, "border")) {
@@ -62,6 +63,7 @@ pub fn generateBorderRadius(generator: *CSSGenerator, parsed: *const class_parse
     const radius = border_radius.get(val) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
 
     const utility = parsed.utility;
     if (std.mem.eql(u8, utility, "rounded")) {

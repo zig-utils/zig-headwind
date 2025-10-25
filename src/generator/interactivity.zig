@@ -91,6 +91,7 @@ pub fn generateCursor(
     const cursor_value = cursor_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "cursor", cursor_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -106,6 +107,7 @@ pub fn generatePointerEvents(
     const pointer_value = pointer_events_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "pointer-events", pointer_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -122,6 +124,7 @@ pub fn generateResize(
         resize_values.get("") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "resize", resize_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -137,6 +140,7 @@ pub fn generateScrollBehavior(
     const scroll_value = scroll_behavior_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "scroll-behavior", scroll_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -152,6 +156,7 @@ pub fn generateSelect(
     const select_value = user_select_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "user-select", select_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -167,6 +172,7 @@ pub fn generateAppearance(
     const appearance_value = appearance_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "appearance", appearance_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -183,6 +189,7 @@ pub fn generateCaretColor(
     const color_value = colors.getColorValue(color_info.color, color_info.shade) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "caret-color", color_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -199,6 +206,7 @@ pub fn generateAccentColor(
     const color_value = colors.getColorValue(color_info.color, color_info.shade) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "accent-color", color_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -221,6 +229,7 @@ pub fn generateWillChange(
     const will_change_value = will_change_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "will-change", will_change_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -257,6 +266,7 @@ pub fn generateScrollMargin(
     const spacing_value = spacing_scale.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     if (side) |s| {
         if (std.mem.eql(u8, s, "x")) {
             try rule.addDeclaration(generator.allocator, "scroll-margin-left", spacing_value);
@@ -291,6 +301,7 @@ pub fn generateScrollPadding(
     const spacing_value = spacing_scale.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     if (side) |s| {
         if (std.mem.eql(u8, s, "x")) {
             try rule.addDeclaration(generator.allocator, "scroll-padding-left", spacing_value);
@@ -321,16 +332,17 @@ pub fn generateScrollSnapType(
 ) !void {
     const snap_type_map = std.StaticStringMap([]const u8).initComptime(.{
         .{ "none", "none" },
-        .{ "x", "x var(--tw-scroll-snap-strictness)" },
-        .{ "y", "y var(--tw-scroll-snap-strictness)" },
-        .{ "both", "both var(--tw-scroll-snap-strictness)" },
-        .{ "mandatory", "var(--tw-scroll-snap-strictness)" },
-        .{ "proximity", "var(--tw-scroll-snap-strictness)" },
+        .{ "x", "x var(--hw-scroll-snap-strictness)" },
+        .{ "y", "y var(--hw-scroll-snap-strictness)" },
+        .{ "both", "both var(--hw-scroll-snap-strictness)" },
+        .{ "mandatory", "var(--hw-scroll-snap-strictness)" },
+        .{ "proximity", "var(--hw-scroll-snap-strictness)" },
     });
 
     const snap_value = snap_type_map.get(value orelse "none") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "scroll-snap-type", snap_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -351,6 +363,7 @@ pub fn generateScrollSnapAlign(
     const align_value = snap_align_map.get(value orelse "start") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "scroll-snap-align", align_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -369,6 +382,7 @@ pub fn generateScrollSnapStop(
     const stop_value = snap_stop_map.get(value orelse "normal") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "scroll-snap-stop", stop_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -395,6 +409,7 @@ pub fn generateTouchAction(
     const action_value = touch_action_map.get(value orelse "auto") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "touch-action", action_value);
     try generator.rules.append(generator.allocator, rule);
 }

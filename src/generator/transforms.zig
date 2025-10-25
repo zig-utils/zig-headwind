@@ -110,6 +110,7 @@ pub fn generateScale(
     const scale_value = scale_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "transform", try std.fmt.allocPrint(
         generator.allocator,
         "scale({s})",
@@ -129,6 +130,7 @@ pub fn generateScaleX(
     const scale_value = scale_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "transform", try std.fmt.allocPrint(
         generator.allocator,
         "scaleX({s})",
@@ -148,6 +150,7 @@ pub fn generateScaleY(
     const scale_value = scale_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "transform", try std.fmt.allocPrint(
         generator.allocator,
         "scaleY({s})",
@@ -167,6 +170,7 @@ pub fn generateRotate(
     const rotate_value = rotate_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "transform", try std.fmt.allocPrint(
         generator.allocator,
         "rotate({s})",
@@ -186,6 +190,7 @@ pub fn generateTranslateX(
     const translate_value = translate_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "transform", try std.fmt.allocPrint(
         generator.allocator,
         "translateX({s})",
@@ -205,6 +210,7 @@ pub fn generateTranslateY(
     const translate_value = translate_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "transform", try std.fmt.allocPrint(
         generator.allocator,
         "translateY({s})",
@@ -224,6 +230,7 @@ pub fn generateSkewX(
     const skew_value = skew_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "transform", try std.fmt.allocPrint(
         generator.allocator,
         "skewX({s})",
@@ -243,6 +250,7 @@ pub fn generateSkewY(
     const skew_value = skew_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclarationOwned(generator.allocator, "transform", try std.fmt.allocPrint(
         generator.allocator,
         "skewY({s})",
@@ -262,6 +270,7 @@ pub fn generateOrigin(
     const origin_value = origin_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "transform-origin", origin_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -280,6 +289,7 @@ pub fn generateTransformStyle(
     const style_value = transform_style_map.get(value orelse "flat") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "transform-style", style_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -312,6 +322,7 @@ pub fn generatePerspective(
     const perspective_value = perspective_scale.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "perspective", perspective_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -339,6 +350,7 @@ pub fn generatePerspectiveOrigin(
     const origin_value = perspective_origin_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "perspective-origin", origin_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -357,6 +369,7 @@ pub fn generateBackfaceVisibility(
     const visibility_value = visibility_map.get(value orelse "visible") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "backface-visibility", visibility_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -381,6 +394,7 @@ pub fn generateAnimationIterationCount(
     const iteration_value = iteration_map.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "animation-iteration-count", iteration_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -401,6 +415,7 @@ pub fn generateAnimationDirection(
     const direction_value = direction_map.get(value orelse "normal") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "animation-direction", direction_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -421,6 +436,7 @@ pub fn generateAnimationFillMode(
     const fill_mode_value = fill_mode_map.get(value orelse "none") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "animation-fill-mode", fill_mode_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -439,6 +455,7 @@ pub fn generateAnimationPlayState(
     const play_state_value = play_state_map.get(value orelse "running") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "animation-play-state", play_state_value);
     try generator.rules.append(generator.allocator, rule);
 }

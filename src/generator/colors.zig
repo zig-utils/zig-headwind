@@ -123,6 +123,7 @@ pub fn generateBackground(generator: *CSSGenerator, parsed: *const class_parser.
     };
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "background-color", color_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -140,6 +141,7 @@ pub fn generateTextColor(generator: *CSSGenerator, parsed: *const class_parser.P
     };
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "color", color_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -157,6 +159,7 @@ pub fn generateBorderColor(generator: *CSSGenerator, parsed: *const class_parser
     };
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "border-color", color_value);
     try generator.rules.append(generator.allocator, rule);
 }

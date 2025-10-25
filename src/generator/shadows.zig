@@ -28,6 +28,7 @@ pub fn generateShadow(
         shadow_values.get("") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "box-shadow", shadow_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -44,10 +45,11 @@ pub fn generateShadowColor(
     const color_value = colors.getColorValue(color_info.color, color_info.shade) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
 
-    // Set --tw-shadow-color custom property
-    try rule.addDeclaration(generator.allocator, "--tw-shadow-color", color_value);
-    try rule.addDeclaration(generator.allocator, "--tw-shadow", "var(--tw-shadow-colored)");
+    // Set --hw-shadow-color custom property
+    try rule.addDeclaration(generator.allocator, "--hw-shadow-color", color_value);
+    try rule.addDeclaration(generator.allocator, "--hw-shadow", "var(--hw-shadow-colored)");
 
     try generator.rules.append(generator.allocator, rule);
 }

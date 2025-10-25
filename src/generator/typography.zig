@@ -41,6 +41,7 @@ pub fn generateText(generator: *CSSGenerator, parsed: *const class_parser.Parsed
     if (value == null) return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
 
     // Font size
     if (font_sizes.get(value.?)) |size_info| {
@@ -73,6 +74,7 @@ pub fn generateText(generator: *CSSGenerator, parsed: *const class_parser.Parsed
     } else if (std.mem.startsWith(u8, value.?, "red")) {
         try rule.addDeclaration(generator.allocator, "color", "#ef4444");
     } else {
+        rule.deinit(generator.allocator);
         return;
     }
 
@@ -84,6 +86,7 @@ pub fn generateFont(generator: *CSSGenerator, parsed: *const class_parser.Parsed
     if (value == null) return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
 
     // Font weight
     if (font_weights.get(value.?)) |weight| {
@@ -122,6 +125,7 @@ pub fn generateTextShadow(
     const shadow_value = text_shadow_map.get(value orelse "") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "text-shadow", shadow_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -129,6 +133,7 @@ pub fn generateTextShadow(
 /// Font style utilities (italic, not-italic)
 pub fn generateFontStyle(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
 
     const utility = parsed.utility;
     if (std.mem.eql(u8, utility, "italic")) {
@@ -145,6 +150,7 @@ pub fn generateFontStyle(generator: *CSSGenerator, parsed: *const class_parser.P
 /// Text decoration utilities (underline, line-through, no-underline, overline)
 pub fn generateTextDecoration(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
 
     const utility = parsed.utility;
     if (std.mem.eql(u8, utility, "underline")) {
@@ -165,6 +171,7 @@ pub fn generateTextDecoration(generator: *CSSGenerator, parsed: *const class_par
 /// Text transform utilities (uppercase, lowercase, capitalize, normal-case)
 pub fn generateTextTransform(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
 
     const utility = parsed.utility;
     if (std.mem.eql(u8, utility, "uppercase")) {
@@ -185,6 +192,7 @@ pub fn generateTextTransform(generator: *CSSGenerator, parsed: *const class_pars
 /// Text overflow utilities (truncate, text-ellipsis, text-clip)
 pub fn generateTextOverflow(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
 
     const utility = parsed.utility;
     if (std.mem.eql(u8, utility, "truncate")) {
@@ -228,6 +236,7 @@ pub fn generateLineHeight(generator: *CSSGenerator, parsed: *const class_parser.
     const line_height = line_heights.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "line-height", line_height);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -249,6 +258,7 @@ pub fn generateLetterSpacing(generator: *CSSGenerator, parsed: *const class_pars
     const letter_spacing = letter_spacings.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "letter-spacing", letter_spacing);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -258,6 +268,7 @@ pub fn generateWhitespace(generator: *CSSGenerator, parsed: *const class_parser.
     if (value == null) return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
 
     if (std.mem.eql(u8, value.?, "normal")) {
         try rule.addDeclaration(generator.allocator, "white-space", "normal");
@@ -281,6 +292,7 @@ pub fn generateWhitespace(generator: *CSSGenerator, parsed: *const class_parser.
 /// Text wrap utilities (text-wrap, text-nowrap, text-balance, text-pretty)
 pub fn generateTextWrap(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
 
     const utility = parsed.utility;
     if (std.mem.eql(u8, utility, "text-wrap")) {
@@ -303,6 +315,7 @@ pub fn generateVerticalAlign(generator: *CSSGenerator, parsed: *const class_pars
     if (value == null) return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
 
     if (std.mem.eql(u8, value.?, "baseline")) {
         try rule.addDeclaration(generator.allocator, "vertical-align", "baseline");
@@ -330,6 +343,7 @@ pub fn generateVerticalAlign(generator: *CSSGenerator, parsed: *const class_pars
 /// Word break utilities
 pub fn generateWordBreak(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
 
     const utility = parsed.utility;
     if (std.mem.eql(u8, utility, "break-normal")) {
@@ -374,6 +388,7 @@ pub fn generateTextIndent(generator: *CSSGenerator, parsed: *const class_parser.
     const indent_value = text_indent_scale.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "text-indent", indent_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -392,6 +407,7 @@ pub fn generateHyphens(generator: *CSSGenerator, parsed: *const class_parser.Par
         return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "hyphens", css_value);
     try generator.rules.append(generator.allocator, rule);
 }
@@ -416,6 +432,7 @@ pub fn generateTextAlign(generator: *CSSGenerator, parsed: *const class_parser.P
         return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "text-align", css_value);
     try generator.rules.append(generator.allocator, rule);
 }

@@ -33,6 +33,7 @@ pub fn generateDisplay(generator: *CSSGenerator, parsed: *const class_parser.Par
     const display_value = display_map.get(value orelse "") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "display", display_value);
 }
 
@@ -49,6 +50,7 @@ pub fn generatePosition(generator: *CSSGenerator, parsed: *const class_parser.Pa
     const position_value = position_map.get(value orelse "") orelse return;
 
     var rule = try generator.createRule(parsed);
+    errdefer rule.deinit(generator.allocator);
     try rule.addDeclaration(generator.allocator, "position", position_value);
 }
 

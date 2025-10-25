@@ -752,6 +752,8 @@ pub const CSSGenerator = struct {
                             "{s}{s} ~ ",
                             .{ peer_class_name, pseudo },
                         );
+                        errdefer self.allocator.free(peer_selector);
+
                         if (rule.parent_selector) |existing| {
                             const combined = try std.fmt.allocPrint(
                                 self.allocator,
