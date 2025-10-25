@@ -2,10 +2,11 @@ const std = @import("std");
 const zig_config = @import("zig-config");
 const schema = @import("schema.zig");
 
+pub const ConfigResult = zig_config.ConfigResult(schema.HeadwindConfig);
+
 /// Load Headwind configuration using zig-config
-/// Note: The returned config owns its memory. Strings and arrays in the config
-/// must be freed by the caller using the same allocator.
-pub fn loadConfig(allocator: std.mem.Allocator, options: LoadOptions) !schema.HeadwindConfig {
+/// Returns the full ConfigResult which must be deinitialized by the caller
+pub fn loadConfigResult(allocator: std.mem.Allocator, options: LoadOptions) !ConfigResult {
     // Use zig-config to load configuration
     var config_result = try zig_config.loadConfig(
         schema.HeadwindConfig,
@@ -16,13 +17,24 @@ pub fn loadConfig(allocator: std.mem.Allocator, options: LoadOptions) !schema.He
             .env_prefix = "HEADWIND",
         },
     );
-    // Don't deinit - the caller owns the config now
-    // The parsed data is owned by the returned value
     errdefer config_result.deinit(allocator);
 
     // Validate the configuration
     try schema.validate(&config_result.value);
 
+    return config_result;
+}
+
+/// Load Headwind configuration using zig-config
+/// Note: The returned config owns its memory. Strings and arrays in the config
+/// must be freed by the caller using the same allocator.
+/// DEPRECATED: Use loadConfigResult() instead and call deinit() on the result
+/// WARNING: This function leaks memory - the ConfigResult is not properly cleaned up
+pub fn loadConfig(allocator: std.mem.Allocator, options: LoadOptions) !schema.HeadwindConfig {
+    const config_result = try loadConfigResult(allocator, options);
+    // WARNING: This leaks memory! The config_result should be deinitialized
+    // but we can't do it here because we're returning the value.
+    // Callers should use loadConfigResult() instead.
     return config_result.value;
 }
 

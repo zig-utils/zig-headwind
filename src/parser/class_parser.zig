@@ -237,3 +237,137 @@ test "parseUtility" {
     try std.testing.expectEqualStrings("bg", result.name);
     try std.testing.expectEqualStrings("blue-500", result.value.?);
 }
+
+test "parseClass: simple utility - extended" {
+    const allocator = std.testing.allocator;
+
+    var parsed = try parseClass(allocator, "bg-blue-500");
+    defer parsed.deinit(allocator);
+
+    try std.testing.expectEqualStrings("bg-blue-500", parsed.raw);
+    try std.testing.expectEqualStrings("bg-blue-500", parsed.utility);
+    try std.testing.expectEqual(@as(usize, 0), parsed.variants.len);
+    try std.testing.expect(!parsed.is_arbitrary);
+    try std.testing.expect(!parsed.is_important);
+}
+
+test "parseClass: with hover variant" {
+    const allocator = std.testing.allocator;
+
+    var parsed = try parseClass(allocator, "hover:bg-blue-500");
+    defer parsed.deinit(allocator);
+
+    try std.testing.expectEqualStrings("bg-blue-500", parsed.utility);
+    try std.testing.expectEqual(@as(usize, 1), parsed.variants.len);
+    try std.testing.expectEqualStrings("hover", parsed.variants[0].variant);
+}
+
+test "parseClass: multiple variants" {
+    const allocator = std.testing.allocator;
+
+    var parsed = try parseClass(allocator, "md:hover:focus:text-xl");
+    defer parsed.deinit(allocator);
+
+    try std.testing.expectEqualStrings("text-xl", parsed.utility);
+    try std.testing.expectEqual(@as(usize, 3), parsed.variants.len);
+}
+
+test "parseClass: arbitrary value" {
+    const allocator = std.testing.allocator;
+
+    var parsed = try parseClass(allocator, "w-[100px]");
+    defer parsed.deinit(allocator);
+
+    try std.testing.expect(parsed.is_arbitrary);
+    try std.testing.expectEqualStrings("100px", parsed.arbitrary_value.?);
+    try std.testing.expectEqualStrings("w-[100px]", parsed.utility);
+}
+
+test "parseClass: arbitrary value with variant" {
+    const allocator = std.testing.allocator;
+
+    var parsed = try parseClass(allocator, "hover:w-[150px]");
+    defer parsed.deinit(allocator);
+
+    try std.testing.expect(parsed.is_arbitrary);
+    try std.testing.expectEqualStrings("150px", parsed.arbitrary_value.?);
+    try std.testing.expectEqual(@as(usize, 1), parsed.variants.len);
+}
+
+test "parseClass: important modifier" {
+    const allocator = std.testing.allocator;
+
+    var parsed = try parseClass(allocator, "!text-center");
+    defer parsed.deinit(allocator);
+
+    try std.testing.expect(parsed.is_important);
+    try std.testing.expectEqualStrings("text-center", parsed.utility);
+}
+
+test "parseClass: dark mode variant" {
+    const allocator = std.testing.allocator;
+
+    var parsed = try parseClass(allocator, "dark:bg-gray-900");
+    defer parsed.deinit(allocator);
+
+    try std.testing.expectEqual(@as(usize, 1), parsed.variants.len);
+    try std.testing.expectEqualStrings("dark", parsed.variants[0].variant);
+}
+
+test "parseClass: responsive variant" {
+    const allocator = std.testing.allocator;
+
+    var parsed = try parseClass(allocator, "md:text-lg");
+    defer parsed.deinit(allocator);
+
+    try std.testing.expectEqual(@as(usize, 1), parsed.variants.len);
+    try std.testing.expectEqualStrings("md", parsed.variants[0].variant);
+}
+
+test "parseClass: named group" {
+    const allocator = std.testing.allocator;
+
+    var parsed = try parseClass(allocator, "group/sidebar-hover:bg-blue-500");
+    defer parsed.deinit(allocator);
+
+    try std.testing.expectEqual(@as(usize, 1), parsed.variants.len);
+    try std.testing.expectEqualStrings("group/sidebar-hover", parsed.variants[0].variant);
+    if (std.mem.indexOf(u8, parsed.variants[0].variant, "/")) |slash_pos| {
+        const group_name = parsed.variants[0].variant[slash_pos + 1 ..];
+        try std.testing.expect(std.mem.indexOf(u8, group_name, "sidebar") != null);
+    }
+}
+
+test "parseClass: negative margin" {
+    const allocator = std.testing.allocator;
+
+    var parsed = try parseClass(allocator, "-m-4");
+    defer parsed.deinit(allocator);
+
+    try std.testing.expectEqualStrings("-m-4", parsed.utility);
+    try std.testing.expect(std.mem.startsWith(u8, parsed.utility, "-"));
+}
+
+test "parseUtility: simple" {
+    const result = parseUtility("bg-blue-500");
+    try std.testing.expectEqualStrings("bg", result.name);
+    try std.testing.expectEqualStrings("blue-500", result.value.?);
+}
+
+test "parseUtility: single word" {
+    const result = parseUtility("flex");
+    try std.testing.expectEqualStrings("flex", result.name);
+    try std.testing.expect(result.value == null);
+}
+
+test "parseUtility: negative margin" {
+    const result = parseUtility("-m-4");
+    try std.testing.expectEqualStrings("-m", result.name);
+    try std.testing.expectEqualStrings("4", result.value.?);
+}
+
+test "parseUtility: multiple dashes" {
+    const result = parseUtility("text-slate-900");
+    try std.testing.expectEqualStrings("text", result.name);
+    try std.testing.expectEqualStrings("slate-900", result.value.?);
+}

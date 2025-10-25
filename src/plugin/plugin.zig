@@ -38,9 +38,9 @@ pub const PluginContext = struct {
         return .{
             .allocator = allocator,
             .config = config,
-            .base_styles = std.ArrayList(CustomStyle){},
-            .component_styles = std.ArrayList(CustomStyle){},
-            .utility_styles = std.ArrayList(CustomStyle){},
+            .base_styles = .{},
+            .component_styles = .{},
+            .utility_styles = .{},
             .custom_variants = std.StringHashMap(VariantDefinition).init(allocator),
         };
     }
@@ -151,6 +151,7 @@ pub const CustomStyle = struct {
 
     pub fn initFromUtility(allocator: std.mem.Allocator, util: UtilityDefinition) !CustomStyle {
         const selector = try std.fmt.allocPrint(allocator, ".{s}", .{util.name});
+        defer allocator.free(selector);
         return init(allocator, selector, util.declarations);
     }
 
@@ -225,7 +226,7 @@ pub const PluginRegistry = struct {
 
     pub fn init(allocator: std.mem.Allocator) PluginRegistry {
         return .{
-            .plugins = std.ArrayList(Plugin){},
+            .plugins = .{},
             .allocator = allocator,
         };
     }

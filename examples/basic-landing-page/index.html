@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zig Headwind - Landing Page Example</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 shadow-md">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                    Zig Headwind
+                </h1>
+                <nav class="flex gap-6">
+                    <a href="#features" class="text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors">
+                        Features
+                    </a>
+                    <a href="#docs" class="text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors">
+                        Docs
+                    </a>
+                    <a href="#github" class="text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors">
+                        GitHub
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="container mx-auto px-4 py-20">
+        <div class="text-center">
+            <h2 class="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+                Blazing Fast
+                <span class="text-blue-600 dark:text-blue-400">Tailwind Alternative</span>
+            </h2>
+            <p class="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+                A high-performance Tailwind CSS alternative built with Zig.
+                Zero Node.js, maximum speed.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="#get-started" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all">
+                    Get Started
+                </a>
+                <a href="#learn-more" class="px-8 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-semibold rounded-lg transition-colors">
+                    Learn More
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="bg-white dark:bg-gray-800 py-20">
+        <div class="container mx-auto px-4">
+            <h3 class="text-3xl font-bold text-center text-gray-900 dark:text-white mb-12">
+                Why Zig Headwind?
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="p-6 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 transition-colors">
+                    <div class="text-4xl mb-4">🚀</div>
+                    <h4 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                        Lightning Fast
+                    </h4>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        Built with Zig for maximum performance. No JavaScript runtime needed.
+                    </p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="p-6 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 transition-colors">
+                    <div class="text-4xl mb-4">🎯</div>
+                    <h4 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                        Type Safe
+                    </h4>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        Compile-time safety guarantees catch errors before they reach production.
+                    </p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="p-6 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 transition-colors">
+                    <div class="text-4xl mb-4">🎨</div>
+                    <h4 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                        Tailwind Compatible
+                    </h4>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        Near complete feature parity with Tailwind CSS. Just works.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Code Example -->
+    <section class="container mx-auto px-4 py-20">
+        <div class="max-w-4xl mx-auto">
+            <h3 class="text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">
+                Simple to Use
+            </h3>
+            <div class="bg-gray-900 rounded-lg p-6 overflow-x-auto">
+                <pre class="text-gray-100"><code><!-- Build your CSS -->
+./zig-out/bin/headwind build index.html -o styles.css
+
+<!-- Watch for changes -->
+./zig-out/bin/headwind watch index.html -o styles.css</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-300 py-12">
+        <div class="container mx-auto px-4 text-center">
+            <p class="mb-4">
+                Built with ❤️ and Zig
+            </p>
+            <p class="text-gray-500">
+                Open source and ready for production
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

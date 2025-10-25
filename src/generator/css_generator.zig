@@ -40,11 +40,18 @@ pub const CSSRule = struct {
         try self.declarations.put(prop, val);
     }
 
+    /// Add a declaration taking ownership of the value (useful for allocPrint results)
+    pub fn addDeclarationOwned(self: *CSSRule, allocator: std.mem.Allocator, property: []const u8, value: []const u8) !void {
+        const prop = try allocator.dupe(u8, property);
+        try self.declarations.put(prop, value);
+    }
+
     pub fn toString(self: *const CSSRule, allocator: std.mem.Allocator) ![]const u8 {
         var result = string_utils.StringBuilder.init(allocator);
         errdefer result.deinit();
 
         // Build selector with parent selector (for group/peer) and pseudo-classes
+        var needs_free = false;
         const full_selector = if (self.parent_selector) |parent| blk: {
             var sel = string_utils.StringBuilder.init(allocator);
             defer sel.deinit();
@@ -53,15 +60,20 @@ pub const CSSRule = struct {
             if (self.pseudo) |pseudo| {
                 try sel.append(pseudo);
             }
+            needs_free = true;
             break :blk try sel.toOwnedSlice();
         } else if (self.pseudo) |pseudo| blk: {
             var sel = string_utils.StringBuilder.init(allocator);
             defer sel.deinit();
             try sel.append(self.selector);
             try sel.append(pseudo);
+            needs_free = true;
             break :blk try sel.toOwnedSlice();
-        } else try allocator.dupe(u8, self.selector);
-        defer if (self.pseudo != null or self.parent_selector != null) allocator.free(full_selector);
+        } else blk: {
+            needs_free = true;
+            break :blk try allocator.dupe(u8, self.selector);
+        };
+        defer if (needs_free) allocator.free(full_selector);
 
         // Wrap in media query if needed
         if (self.media) |media| {
@@ -158,7 +170,7 @@ pub const CSSGenerator = struct {
     pub fn initWithConfig(allocator: std.mem.Allocator, config: Config) CSSGenerator {
         return .{
             .allocator = allocator,
-            .rules = std.ArrayList(CSSRule){},
+            .rules = .{},
             .dark_mode_selector = config.dark_mode_selector,
             .dark_mode_strategy = config.dark_mode_strategy,
         };
@@ -187,7 +199,15 @@ pub const CSSGenerator = struct {
     /// Generate utility CSS based on parsed class
     fn generateUtility(self: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
         const utility_parts = class_parser.parseUtility(parsed.utility);
-        const utility_name = utility_parts.name;
+        var utility_name = utility_parts.name;
+
+        // Handle negative margins: "-m-4" becomes name="-m", we want to match on "m"
+        const is_negative_margin = std.mem.startsWith(u8, utility_name, "-m");
+        if (is_negative_margin) {
+            // Call generateMargin directly for negative margins
+            try self.generateMargin(parsed, utility_parts.value);
+            return;
+        }
 
         // Dispatch to appropriate utility generator
         if (std.mem.eql(u8, utility_name, "flex")) {
@@ -243,6 +263,8 @@ pub const CSSGenerator = struct {
             try self.generateGap(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "whitespace")) {
             try self.generateWhitespace(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "hyphens")) {
+            try self.generateHyphens(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "w")) {
             try self.generateWidth(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "h")) {
@@ -297,11 +319,17 @@ pub const CSSGenerator = struct {
             try self.generateLineHeight(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "tracking")) {
             try self.generateLetterSpacing(parsed, utility_parts.value);
+        } else if (std.mem.startsWith(u8, utility_name, "indent")) {
+            try self.generateTextIndent(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "align")) {
             try self.generateVerticalAlign(parsed, utility_parts.value);
-        } else if (std.mem.eql(u8, utility_name, "break-normal") or std.mem.eql(u8, utility_name, "break-words") or
-                   std.mem.eql(u8, utility_name, "break-all") or std.mem.eql(u8, utility_name, "break-keep")) {
-            try self.generateWordBreak(parsed);
+        } else if (std.mem.eql(u8, utility_name, "break")) {
+            if (utility_parts.value) |val| {
+                if (std.mem.eql(u8, val, "normal") or std.mem.eql(u8, val, "words") or
+                    std.mem.eql(u8, val, "all") or std.mem.eql(u8, val, "keep")) {
+                    try self.generateWordBreak(parsed);
+                }
+            }
         } else if (std.mem.startsWith(u8, utility_name, "bg")) {
             // Check for special background utilities
             if (utility_parts.value) |val| {
@@ -537,13 +565,36 @@ pub const CSSGenerator = struct {
         try self.rules.append(self.allocator, rule);
     }
 
+    /// Escape special characters in CSS selector
+    fn escapeSelector(builder: *string_utils.StringBuilder, raw: []const u8) !void {
+        for (raw, 0..) |char, i| {
+            // Escape characters that need escaping in CSS selectors
+            // Leading dash, brackets, colons, slashes, etc.
+            switch (char) {
+                '-' => {
+                    // Check if this is the first character (needs escaping)
+                    if (i == 0) {
+                        try builder.append("\\");
+                    }
+                    try builder.appendChar(char);
+                },
+                '[', ']', '/', ':', '!', '%', '.', '#', ' ', '(', ')' => {
+                    try builder.append("\\");
+                    try builder.appendChar(char);
+                },
+                else => try builder.appendChar(char),
+            }
+        }
+    }
+
     pub fn createRule(self: *CSSGenerator, parsed: *const class_parser.ParsedClass) !CSSRule {
         // Build selector
         var selector = string_utils.StringBuilder.init(self.allocator);
         defer selector.deinit();
 
         try selector.append(".");
-        try selector.append(parsed.raw);
+        // Escape special characters in selector (e.g., leading dash for negative margins)
+        try escapeSelector(&selector, parsed.raw);
 
         var rule = try CSSRule.init(self.allocator, selector.toString());
         rule.is_important = parsed.is_important;
@@ -772,7 +823,14 @@ pub const CSSGenerator = struct {
         if (self.rules.items.len == 0) return;
 
         var seen = std.StringHashMap(void).init(self.allocator);
-        defer seen.deinit();
+        defer {
+            // Free all the keys we allocated
+            var iter = seen.keyIterator();
+            while (iter.next()) |key| {
+                self.allocator.free(key.*);
+            }
+            seen.deinit();
+        }
 
         var write_index: usize = 0;
         for (self.rules.items, 0..) |*rule, read_index| {
@@ -909,6 +967,14 @@ pub const CSSGenerator = struct {
 
     fn generateWordBreak(self: *CSSGenerator, parsed: *const class_parser.ParsedClass) !void {
         return typography.generateWordBreak(self, parsed);
+    }
+
+    fn generateTextIndent(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return typography.generateTextIndent(self, parsed, value);
+    }
+
+    fn generateHyphens(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return typography.generateHyphens(self, parsed, value);
     }
 
     fn generateBackground(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {

@@ -217,8 +217,12 @@ test "FileCache basic operations" {
     defer cache.deinit();
     defer cache.clear() catch {};
 
-    // Test data
-    const test_classes = &[_][]const u8{ "flex", "items-center", "bg-blue-500" };
+    // Test data - allocate mutable slice
+    var test_classes = try allocator.alloc([]const u8, 3);
+    defer allocator.free(test_classes);
+    test_classes[0] = "flex";
+    test_classes[1] = "items-center";
+    test_classes[2] = "bg-blue-500";
 
     // Put classes
     try cache.put("test.html", test_classes);

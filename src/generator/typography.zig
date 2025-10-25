@@ -56,6 +56,10 @@ pub fn generateText(generator: *CSSGenerator, parsed: *const class_parser.Parsed
         try rule.addDeclaration(generator.allocator, "text-align", "right");
     } else if (std.mem.eql(u8, value.?, "justify")) {
         try rule.addDeclaration(generator.allocator, "text-align", "justify");
+    } else if (std.mem.eql(u8, value.?, "start")) {
+        try rule.addDeclaration(generator.allocator, "text-align", "start");
+    } else if (std.mem.eql(u8, value.?, "end")) {
+        try rule.addDeclaration(generator.allocator, "text-align", "end");
     }
     // Text color - simplified (using color names)
     else if (std.mem.startsWith(u8, value.?, "white")) {
@@ -341,5 +345,77 @@ pub fn generateWordBreak(generator: *CSSGenerator, parsed: *const class_parser.P
         return;
     }
 
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Text indent scale
+const text_indent_scale = std.StaticStringMap([]const u8).initComptime(.{
+    .{ "0", "0" },
+    .{ "px", "1px" },
+    .{ "0.5", "0.125rem" },
+    .{ "1", "0.25rem" },
+    .{ "1.5", "0.375rem" },
+    .{ "2", "0.5rem" },
+    .{ "2.5", "0.625rem" },
+    .{ "3", "0.75rem" },
+    .{ "4", "1rem" },
+    .{ "5", "1.25rem" },
+    .{ "6", "1.5rem" },
+    .{ "8", "2rem" },
+    .{ "10", "2.5rem" },
+    .{ "12", "3rem" },
+    .{ "16", "4rem" },
+});
+
+/// Generate text-indent utilities
+pub fn generateTextIndent(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+    if (value == null) return;
+
+    const indent_value = text_indent_scale.get(value.?) orelse return;
+
+    var rule = try generator.createRule(parsed);
+    try rule.addDeclaration(generator.allocator, "text-indent", indent_value);
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Generate hyphens utilities
+pub fn generateHyphens(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+    if (value == null) return;
+
+    const css_value = if (std.mem.eql(u8, value.?, "none"))
+        "none"
+    else if (std.mem.eql(u8, value.?, "manual"))
+        "manual"
+    else if (std.mem.eql(u8, value.?, "auto"))
+        "auto"
+    else
+        return;
+
+    var rule = try generator.createRule(parsed);
+    try rule.addDeclaration(generator.allocator, "hyphens", css_value);
+    try generator.rules.append(generator.allocator, rule);
+}
+
+/// Generate text-align start/end utilities
+pub fn generateTextAlign(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+    if (value == null) return;
+
+    const css_value = if (std.mem.eql(u8, value.?, "start"))
+        "start"
+    else if (std.mem.eql(u8, value.?, "end"))
+        "end"
+    else if (std.mem.eql(u8, value.?, "left"))
+        "left"
+    else if (std.mem.eql(u8, value.?, "center"))
+        "center"
+    else if (std.mem.eql(u8, value.?, "right"))
+        "right"
+    else if (std.mem.eql(u8, value.?, "justify"))
+        "justify"
+    else
+        return;
+
+    var rule = try generator.createRule(parsed);
+    try rule.addDeclaration(generator.allocator, "text-align", css_value);
     try generator.rules.append(generator.allocator, rule);
 }

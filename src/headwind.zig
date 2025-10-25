@@ -148,6 +148,7 @@ pub const Headwind = struct {
         if (self.config.build.preflight) {
             const preflight_module = @import("generator/preflight.zig");
             const preflight_css = try preflight_module.generatePreflight(self.allocator);
+            // Note: preflight_css is a string literal, no need to free
             try css.append(preflight_css);
             try css.append("\n");
         }
@@ -265,12 +266,31 @@ pub const Headwind = struct {
     }
 };
 
+pub const ConfigResult = config_loader.ConfigResult;
+
 /// Load configuration from default locations
+/// Returns ConfigResult which must be deinitialized by caller
+pub fn loadConfigResult(alloc: std.mem.Allocator) !ConfigResult {
+    return config_loader.loadConfigResult(alloc, .{});
+}
+
+/// Load configuration with custom options
+/// Returns ConfigResult which must be deinitialized by caller
+pub fn loadConfigResultWithOptions(
+    alloc: std.mem.Allocator,
+    options: config_loader.LoadOptions,
+) !ConfigResult {
+    return config_loader.loadConfigResult(alloc, options);
+}
+
+/// Load configuration from default locations
+/// DEPRECATED: Use loadConfigResult() instead
 pub fn loadConfig(alloc: std.mem.Allocator) !HeadwindConfig {
     return config_loader.loadConfig(alloc, .{});
 }
 
 /// Load configuration with custom options
+/// DEPRECATED: Use loadConfigResultWithOptions() instead
 pub fn loadConfigWithOptions(
     alloc: std.mem.Allocator,
     options: config_loader.LoadOptions,

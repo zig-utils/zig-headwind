@@ -90,9 +90,13 @@ pub fn generatePadding(generator: *CSSGenerator, parsed: *const class_parser.Par
     try generator.rules.append(generator.allocator, rule);
 }
 
-/// Generate margin utilities
+/// Generate margin utilities (including negative margins)
 pub fn generateMargin(generator: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
     if (value == null) return;
+
+    // Check if this is a negative margin
+    const utility = parsed.utility;
+    const is_negative = std.mem.startsWith(u8, utility, "-");
 
     // Check for arbitrary value first
     const spacing_value = if (parsed.is_arbitrary and parsed.arbitrary_value != null)
@@ -100,33 +104,55 @@ pub fn generateMargin(generator: *CSSGenerator, parsed: *const class_parser.Pars
     else
         spacing_scale.get(value.?) orelse return;
 
+    // Negate the value if needed
+    const final_value = if (is_negative and !parsed.is_arbitrary) blk: {
+        // Prepend minus sign for scale values
+        break :blk try std.fmt.allocPrint(generator.allocator, "-{s}", .{spacing_value});
+    } else if (is_negative and parsed.is_arbitrary) blk: {
+        // For arbitrary values, prepend minus if not already there
+        if (!std.mem.startsWith(u8, spacing_value, "-")) {
+            break :blk try std.fmt.allocPrint(generator.allocator, "-{s}", .{spacing_value});
+        } else {
+            break :blk spacing_value;
+        }
+    } else spacing_value;
+    defer if (is_negative and final_value.ptr != spacing_value.ptr) generator.allocator.free(final_value);
+
     var rule = try generator.createRule(parsed);
 
-    // Extract utility name (before brackets if arbitrary)
-    const utility = parsed.utility;
+    // Extract utility name (before brackets if arbitrary), removing leading minus
     const utility_name = if (parsed.is_arbitrary) blk: {
         if (std.mem.indexOf(u8, utility, "-[")) |idx| {
-            break :blk utility[0..idx];
+            const name = utility[0..idx];
+            break :blk if (is_negative) name[1..] else name;
         }
-        break :blk utility;
-    } else utility;
+        break :blk if (is_negative) utility[1..] else utility;
+    } else blk: {
+        // For regular utilities like "-m-4", extract just the margin part
+        const base = if (is_negative) utility[1..] else utility;
+        // Find the next dash to get just "m" from "m-4"
+        if (std.mem.indexOf(u8, base, "-")) |dash_pos| {
+            break :blk base[0..dash_pos];
+        }
+        break :blk base;
+    };
 
     if (std.mem.eql(u8, utility_name, "m")) {
-        try rule.addDeclaration(generator.allocator, "margin", spacing_value);
+        try rule.addDeclaration(generator.allocator, "margin", final_value);
     } else if (std.mem.startsWith(u8, utility_name, "mx")) {
-        try rule.addDeclaration(generator.allocator, "margin-left", spacing_value);
-        try rule.addDeclaration(generator.allocator, "margin-right", spacing_value);
+        try rule.addDeclaration(generator.allocator, "margin-left", final_value);
+        try rule.addDeclaration(generator.allocator, "margin-right", final_value);
     } else if (std.mem.startsWith(u8, utility_name, "my")) {
-        try rule.addDeclaration(generator.allocator, "margin-top", spacing_value);
-        try rule.addDeclaration(generator.allocator, "margin-bottom", spacing_value);
+        try rule.addDeclaration(generator.allocator, "margin-top", final_value);
+        try rule.addDeclaration(generator.allocator, "margin-bottom", final_value);
     } else if (std.mem.startsWith(u8, utility_name, "mt")) {
-        try rule.addDeclaration(generator.allocator, "margin-top", spacing_value);
+        try rule.addDeclaration(generator.allocator, "margin-top", final_value);
     } else if (std.mem.startsWith(u8, utility_name, "mr")) {
-        try rule.addDeclaration(generator.allocator, "margin-right", spacing_value);
+        try rule.addDeclaration(generator.allocator, "margin-right", final_value);
     } else if (std.mem.startsWith(u8, utility_name, "mb")) {
-        try rule.addDeclaration(generator.allocator, "margin-bottom", spacing_value);
+        try rule.addDeclaration(generator.allocator, "margin-bottom", final_value);
     } else if (std.mem.startsWith(u8, utility_name, "ml")) {
-        try rule.addDeclaration(generator.allocator, "margin-left", spacing_value);
+        try rule.addDeclaration(generator.allocator, "margin-left", final_value);
     } else {
         return;
     }

@@ -110,7 +110,7 @@ pub fn generateScale(
     const scale_value = scale_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
-    try rule.addDeclaration(generator.allocator, "transform", try std.fmt.allocPrint(
+    try rule.addDeclarationOwned(generator.allocator, "transform", try std.fmt.allocPrint(
         generator.allocator,
         "scale({s})",
         .{scale_value},
@@ -129,7 +129,7 @@ pub fn generateScaleX(
     const scale_value = scale_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
-    try rule.addDeclaration(generator.allocator, "transform", try std.fmt.allocPrint(
+    try rule.addDeclarationOwned(generator.allocator, "transform", try std.fmt.allocPrint(
         generator.allocator,
         "scaleX({s})",
         .{scale_value},
@@ -148,7 +148,7 @@ pub fn generateScaleY(
     const scale_value = scale_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
-    try rule.addDeclaration(generator.allocator, "transform", try std.fmt.allocPrint(
+    try rule.addDeclarationOwned(generator.allocator, "transform", try std.fmt.allocPrint(
         generator.allocator,
         "scaleY({s})",
         .{scale_value},
@@ -167,7 +167,7 @@ pub fn generateRotate(
     const rotate_value = rotate_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
-    try rule.addDeclaration(generator.allocator, "transform", try std.fmt.allocPrint(
+    try rule.addDeclarationOwned(generator.allocator, "transform", try std.fmt.allocPrint(
         generator.allocator,
         "rotate({s})",
         .{rotate_value},
@@ -186,7 +186,7 @@ pub fn generateTranslateX(
     const translate_value = translate_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
-    try rule.addDeclaration(generator.allocator, "transform", try std.fmt.allocPrint(
+    try rule.addDeclarationOwned(generator.allocator, "transform", try std.fmt.allocPrint(
         generator.allocator,
         "translateX({s})",
         .{translate_value},
@@ -205,7 +205,7 @@ pub fn generateTranslateY(
     const translate_value = translate_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
-    try rule.addDeclaration(generator.allocator, "transform", try std.fmt.allocPrint(
+    try rule.addDeclarationOwned(generator.allocator, "transform", try std.fmt.allocPrint(
         generator.allocator,
         "translateY({s})",
         .{translate_value},
@@ -224,7 +224,7 @@ pub fn generateSkewX(
     const skew_value = skew_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
-    try rule.addDeclaration(generator.allocator, "transform", try std.fmt.allocPrint(
+    try rule.addDeclarationOwned(generator.allocator, "transform", try std.fmt.allocPrint(
         generator.allocator,
         "skewX({s})",
         .{skew_value},
@@ -243,7 +243,7 @@ pub fn generateSkewY(
     const skew_value = skew_values.get(value.?) orelse return;
 
     var rule = try generator.createRule(parsed);
-    try rule.addDeclaration(generator.allocator, "transform", try std.fmt.allocPrint(
+    try rule.addDeclarationOwned(generator.allocator, "transform", try std.fmt.allocPrint(
         generator.allocator,
         "skewY({s})",
         .{skew_value},

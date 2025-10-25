@@ -138,13 +138,14 @@ fn buildCommand(allocator: std.mem.Allocator, opts: CommandOptions) !void {
 
     // Load configuration
     _ = opts.config_path; // TODO: Support custom config path
-    const config = headwind.loadConfig(allocator) catch |err| {
+    var config_result = headwind.loadConfigResult(allocator) catch |err| {
         std.debug.print("Error loading config: {}\n", .{err});
         return err;
     };
+    defer config_result.deinit(allocator);
 
     // Initialize Headwind
-    var hw = try headwind.Headwind.init(allocator, config);
+    var hw = try headwind.Headwind.init(allocator, config_result.value);
     defer hw.deinit();
 
     // Build (includes scanning and CSS generation)
@@ -179,10 +180,12 @@ fn watchCommand(allocator: std.mem.Allocator, opts: CommandOptions) !void {
 
     // Load configuration
     _ = opts.config_path; // TODO: Support custom config path
-    const config = headwind.loadConfig(allocator) catch |err| {
+    var config_result = headwind.loadConfigResult(allocator) catch |err| {
         std.debug.print("Error loading config: {}\n", .{err});
         return err;
     };
+    defer config_result.deinit(allocator);
+    const config = config_result.value;
 
     // Set up file watcher callback
     const WatchContext = struct {
