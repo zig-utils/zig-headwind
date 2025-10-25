@@ -77,8 +77,8 @@ A high-performance Tailwind CSS alternative built with Zig, targeting feature pa
    - [ ] Named container queries
 
 7. **Modern CSS Enhancements**
-   - [ ] OKLCH color space support
-   - [ ] color-mix() function support
+   - ✅ OKLCH color space support - COMPLETED (bg-oklch-[...], text-oklch-[...])
+   - ✅ color-mix() function support - COMPLETED (bg-color-mix-[...], text-color-mix-[...])
    - ✅ Scroll utilities (scroll-margin, scroll-padding, scroll-snap-*, touch-action) - COMPLETED
    - ✅ Additional transform utilities (perspective, transform-style, backface-visibility) - COMPLETED
    - ✅ Text-shadow utilities - COMPLETED

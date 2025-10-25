@@ -179,23 +179,43 @@ pub const CSSGenerator = struct {
         } else if (std.mem.startsWith(u8, utility_name, "h")) {
             try self.generateHeight(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "text")) {
-            // text-shadow-sm, text-shadow-lg, etc.
+            // text-shadow-sm, text-oklch-[...], text-color-mix-[...], etc.
             if (std.mem.startsWith(u8, utility_name, "text-shadow")) {
                 // text-shadow-sm -> value="sm"
                 const shadow_value = if (std.mem.eql(u8, utility_name, "text-shadow")) null else utility_parts.value;
                 try self.generateTextShadow(parsed, shadow_value);
+            } else if (utility_parts.value) |val| {
+                if (std.mem.startsWith(u8, val, "oklch-")) {
+                    // text-oklch-[0.5_0.2_180]
+                    const oklch_value = val[6..]; // Skip "oklch-"
+                    try self.generateOklchText(parsed, oklch_value);
+                } else if (std.mem.startsWith(u8, val, "color-mix-")) {
+                    // text-color-mix-[in_srgb,_blue_50%,_red]
+                    const mix_value = val[10..]; // Skip "color-mix-"
+                    try self.generateColorMixText(parsed, mix_value);
+                } else {
+                    try self.generateText(parsed, utility_parts.value);
+                }
             } else {
                 try self.generateText(parsed, utility_parts.value);
             }
         } else if (std.mem.startsWith(u8, utility_name, "font")) {
             try self.generateFont(parsed, utility_parts.value);
         } else if (std.mem.startsWith(u8, utility_name, "bg")) {
-            // Check if it's a gradient utility
+            // Check for special background utilities
             if (utility_parts.value) |val| {
                 if (std.mem.startsWith(u8, val, "gradient")) {
                     // bg-gradient-to-r -> extract "to-r"
                     const gradient_part = val[9..]; // Skip "gradient-"
                     try self.generateBackgroundGradient(parsed, gradient_part);
+                } else if (std.mem.startsWith(u8, val, "oklch-")) {
+                    // bg-oklch-[0.5_0.2_180]
+                    const oklch_value = val[6..]; // Skip "oklch-"
+                    try self.generateOklchBackground(parsed, oklch_value);
+                } else if (std.mem.startsWith(u8, val, "color-mix-")) {
+                    // bg-color-mix-[in_srgb,_blue_50%,_red]
+                    const mix_value = val[10..]; // Skip "color-mix-"
+                    try self.generateColorMixBackground(parsed, mix_value);
                 } else {
                     try self.generateBackground(parsed, utility_parts.value);
                 }
@@ -680,6 +700,23 @@ pub const CSSGenerator = struct {
 
     fn generateBackground(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
         return colors.generateBackground(self, parsed, value);
+    }
+
+    // Modern color functions
+    fn generateOklchBackground(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return modern_colors.generateOklchBackground(self, parsed, value);
+    }
+
+    fn generateOklchText(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return modern_colors.generateOklchText(self, parsed, value);
+    }
+
+    fn generateColorMixBackground(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return modern_colors.generateColorMix(self, parsed, value, "background-color");
+    }
+
+    fn generateColorMixText(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {
+        return modern_colors.generateColorMix(self, parsed, value, "color");
     }
 
     fn generateBorder(self: *CSSGenerator, parsed: *const class_parser.ParsedClass, value: ?[]const u8) !void {

@@ -20,26 +20,26 @@ pub fn generateOklchColor(
     if (std.mem.indexOf(u8, oklch_str, "_") == null) return;
 
     // Replace underscores with spaces and add "deg" to hue
-    var color_value = std.ArrayList(u8).init(generator.allocator);
-    defer color_value.deinit();
+    var color_value = std.ArrayList(u8){};
+    defer color_value.deinit(generator.allocator);
 
-    try color_value.appendSlice("oklch(");
+    try color_value.appendSlice(generator.allocator, "oklch(");
 
-    var iter = std.mem.split(u8, oklch_str, "_");
+    var iter = std.mem.splitSequence(u8, oklch_str, "_");
     var part_num: usize = 0;
     while (iter.next()) |part| {
-        if (part_num > 0) try color_value.append(' ');
-        try color_value.appendSlice(part);
-        if (part_num == 2) try color_value.appendSlice("deg"); // Add deg to hue
+        if (part_num > 0) try color_value.append(generator.allocator, ' ');
+        try color_value.appendSlice(generator.allocator, part);
+        if (part_num == 2) try color_value.appendSlice(generator.allocator, "deg"); // Add deg to hue
         part_num += 1;
     }
-    try color_value.append(')');
+    try color_value.append(generator.allocator, ')');
 
     var rule = try generator.createRule(parsed);
     try rule.addDeclaration(
         generator.allocator,
         property,
-        try color_value.toOwnedSlice(),
+        try color_value.toOwnedSlice(generator.allocator),
     );
     try generator.rules.append(generator.allocator, rule);
 }
@@ -58,24 +58,24 @@ pub fn generateColorMix(
     const mix_str = value.?;
 
     // Simple approach: replace underscores with spaces
-    var color_value = std.ArrayList(u8).init(generator.allocator);
-    defer color_value.deinit();
+    var color_value = std.ArrayList(u8){};
+    defer color_value.deinit(generator.allocator);
 
-    try color_value.appendSlice("color-mix(");
+    try color_value.appendSlice(generator.allocator, "color-mix(");
     for (mix_str) |c| {
         if (c == '_') {
-            try color_value.append(' ');
+            try color_value.append(generator.allocator, ' ');
         } else {
-            try color_value.append(c);
+            try color_value.append(generator.allocator, c);
         }
     }
-    try color_value.append(')');
+    try color_value.append(generator.allocator, ')');
 
     var rule = try generator.createRule(parsed);
     try rule.addDeclaration(
         generator.allocator,
         property,
-        try color_value.toOwnedSlice(),
+        try color_value.toOwnedSlice(generator.allocator),
     );
     try generator.rules.append(generator.allocator, rule);
 }
@@ -109,7 +109,7 @@ pub fn generateOklchBorder(
 
 /// Parse oklch value from arbitrary value syntax
 pub fn parseOklchValue(value: []const u8) ?struct { l: []const u8, c: []const u8, h: []const u8 } {
-    var iter = std.mem.split(u8, value, "_");
+    var iter = std.mem.splitSequence(u8, value, "_");
 
     const l = iter.next() orelse return null;
     const c = iter.next() orelse return null;
@@ -130,24 +130,24 @@ pub fn generateRgbColor(
     // Modern rgb syntax: rgb(r g b / alpha)
     const rgb_str = value.?;
 
-    var color_value = std.ArrayList(u8).init(generator.allocator);
-    defer color_value.deinit();
+    var color_value = std.ArrayList(u8){};
+    defer color_value.deinit(generator.allocator);
 
-    try color_value.appendSlice("rgb(");
+    try color_value.appendSlice(generator.allocator, "rgb(");
     for (rgb_str) |c| {
         if (c == '_') {
-            try color_value.append(' ');
+            try color_value.append(generator.allocator, ' ');
         } else {
-            try color_value.append(c);
+            try color_value.append(generator.allocator, c);
         }
     }
-    try color_value.append(')');
+    try color_value.append(generator.allocator, ')');
 
     var rule = try generator.createRule(parsed);
     try rule.addDeclaration(
         generator.allocator,
         property,
-        try color_value.toOwnedSlice(),
+        try color_value.toOwnedSlice(generator.allocator),
     );
     try generator.rules.append(generator.allocator, rule);
 }
@@ -164,24 +164,24 @@ pub fn generateHslColor(
     // Modern hsl syntax: hsl(h s l / alpha)
     const hsl_str = value.?;
 
-    var color_value = std.ArrayList(u8).init(generator.allocator);
-    defer color_value.deinit();
+    var color_value = std.ArrayList(u8){};
+    defer color_value.deinit(generator.allocator);
 
-    try color_value.appendSlice("hsl(");
+    try color_value.appendSlice(generator.allocator, "hsl(");
     for (hsl_str) |c| {
         if (c == '_') {
-            try color_value.append(' ');
+            try color_value.append(generator.allocator, ' ');
         } else {
-            try color_value.append(c);
+            try color_value.append(generator.allocator, c);
         }
     }
-    try color_value.append(')');
+    try color_value.append(generator.allocator, ')');
 
     var rule = try generator.createRule(parsed);
     try rule.addDeclaration(
         generator.allocator,
         property,
-        try color_value.toOwnedSlice(),
+        try color_value.toOwnedSlice(generator.allocator),
     );
     try generator.rules.append(generator.allocator, rule);
 }
