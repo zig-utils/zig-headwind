@@ -6,7 +6,6 @@ const std = @import("std");
 /// Note: Full SIMD acceleration disabled for compatibility.
 /// Current implementation uses highly optimized scalar code with
 /// loop unrolling and branch prediction hints.
-
 /// Find the first occurrence of a character in a string
 /// Returns the index, or null if not found
 pub inline fn simdIndexOfScalar(haystack: []const u8, needle: u8) ?usize {
@@ -85,9 +84,7 @@ pub inline fn simdIsValidCalcContent(content: []const u8) bool {
 
     for (content) |c| {
         switch (c) {
-            '0'...'9', '.', '+', '-', '*', '/', '%',
-            'v', 'h', 'w', 'p', 'x', 'r', 'e', 'm',
-            ' ', '\t' => {},
+            '0'...'9', '.', '+', '-', '*', '/', '%', 'v', 'h', 'w', 'p', 'x', 'r', 'e', 'm', ' ', '\t' => {},
             else => return false,
         }
     }
@@ -124,7 +121,9 @@ test "simdLastIndexOfScalar" {
 
     const last_colon = simdLastIndexOfScalar(str, ':');
     try std.testing.expect(last_colon != null);
-    try std.testing.expectEqual(@as(usize, 18), last_colon.?);
+    // "test:hover:focus:active" — colons at 4, 10, 16. The expectation said 18,
+    // which is the 'c' of "active"; the implementation was right all along.
+    try std.testing.expectEqual(@as(usize, 16), last_colon.?);
 }
 
 test "simdFindMatchingBracket" {
@@ -153,7 +152,9 @@ test "simdFindVariantSeparators" {
     try std.testing.expectEqual(@as(usize, 3), positions.len);
     try std.testing.expectEqual(@as(usize, 5), positions[0]);
     try std.testing.expectEqual(@as(usize, 11), positions[1]);
-    try std.testing.expectEqual(@as(usize, 20), positions[2]);
+    // "hover:focus:w-[100px]:active" — the separator after the bracket group is
+    // at 21, not 20. Same off-by-one as the test above.
+    try std.testing.expectEqual(@as(usize, 21), positions[2]);
 }
 
 test "simdIsValidCalcContent" {

@@ -358,7 +358,7 @@ test "version" {
 
 test "crosswind init" {
     const cfg = config.defaultConfig();
-    var hw = try crosswind.init(std.testing.allocator, cfg);
+    var hw = try crosswind.init(std.testing.allocator, std.testing.io, cfg);
     defer hw.deinit();
 
     const stats = hw.getStats();
@@ -367,7 +367,7 @@ test "crosswind init" {
 
 test "crosswind build" {
     const cfg = config.defaultConfig();
-    var hw = try crosswind.init(std.testing.allocator, cfg);
+    var hw = try crosswind.init(std.testing.allocator, std.testing.io, cfg);
     defer hw.deinit();
 
     const css = try hw.build();

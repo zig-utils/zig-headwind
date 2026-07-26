@@ -4,13 +4,15 @@ const builtin = @import("builtin");
 /// File watcher for monitoring file changes
 pub const FileWatcher = struct {
     allocator: std.mem.Allocator,
+    io: std.Io,
     paths: std.ArrayList([]const u8),
     callback: *const fn (path: []const u8) void,
     running: std.atomic.Value(bool),
 
-    pub fn init(allocator: std.mem.Allocator, callback: *const fn (path: []const u8) void) !FileWatcher {
+    pub fn init(allocator: std.mem.Allocator, io: std.Io, callback: *const fn (path: []const u8) void) !FileWatcher {
         return .{
             .allocator = allocator,
+            .io = io,
             .paths = .empty,
             .callback = callback,
             .running = std.atomic.Value(bool).init(false),
@@ -70,15 +72,15 @@ pub const FileWatcher = struct {
 
         // Initialize file modification times
         for (self.paths.items) |path| {
-            const stat = std.fs.cwd().statFile(path) catch continue;
+            const stat = std.Io.Dir.cwd().statFile(self.io, path, .{}) catch continue;
             try file_times.put(path, stat.mtime.nanoseconds);
         }
 
         while (self.running.load(.seq_cst)) {
-            std.posix.nanosleep(0, 500 * std.time.ns_per_ms); // Poll every 500ms
+            try self.io.sleep(.{ .nanoseconds = 500 * std.time.ns_per_ms }, .awake); // Poll every 500ms
 
             for (self.paths.items) |path| {
-                const stat = std.fs.cwd().statFile(path) catch continue;
+                const stat = std.Io.Dir.cwd().statFile(self.io, path, .{}) catch continue;
                 const old_time = file_times.get(path) orelse continue;
 
                 if (stat.mtime.nanoseconds != old_time) {
@@ -99,7 +101,7 @@ pub const Debouncer = struct {
     /// 0.17 removed std.time.Timer, so elapsed time is the difference between
     /// two Io timestamps rather than a timer's running count.
     last_event_ns: i96,
-    mutex: std.Thread.Mutex,
+    mutex: std.Io.Mutex,
 
     pub fn init(allocator: std.mem.Allocator, io: std.Io, delay_ms: u64) Debouncer {
         return .{
@@ -107,13 +109,13 @@ pub const Debouncer = struct {
             .io = io,
             .delay_ms = delay_ms,
             .last_event_ns = 0,
-            .mutex = std.Thread.Mutex{},
+            .mutex = .init,
         };
     }
 
     pub fn trigger(self: *Debouncer) bool {
-        self.mutex.lock();
-        defer self.mutex.unlock();
+        self.mutex.lockUncancelable(self.io);
+        defer self.mutex.unlock(self.io);
 
         const now_ns = std.Io.Timestamp.now(self.io, .awake).toNanoseconds();
 
@@ -135,8 +137,8 @@ pub const Debouncer = struct {
     }
 
     pub fn reset(self: *Debouncer) void {
-        self.mutex.lock();
-        defer self.mutex.unlock();
+        self.mutex.lockUncancelable(self.io);
+        defer self.mutex.unlock(self.io);
         self.last_event = 0;
     }
 };
@@ -150,7 +152,7 @@ test "FileWatcher init/deinit" {
         }
     }.onChange;
 
-    var watcher = FileWatcher.init(allocator, callback);
+    var watcher = FileWatcher.init(allocator, std.testing.io, callback);
     defer watcher.deinit();
 
     try watcher.addPath("test.txt");
@@ -158,7 +160,7 @@ test "FileWatcher init/deinit" {
 
 test "Debouncer" {
     const allocator = std.testing.allocator;
-    var debouncer = Debouncer.init(allocator, 100);
+    var debouncer = Debouncer.init(allocator, std.testing.io, 100);
 
     // First trigger should succeed
     try std.testing.expect(debouncer.trigger());

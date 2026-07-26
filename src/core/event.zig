@@ -51,14 +51,14 @@ pub const EventBus = struct {
     allocator: std.mem.Allocator,
     subscribers: std.ArrayList(Subscriber),
     next_id: u64,
-    mutex: std.Thread.Mutex,
+    mutex: std.Io.Mutex,
 
     pub fn init(allocator: std.mem.Allocator) EventBus {
         return .{
             .allocator = allocator,
             .subscribers = std.ArrayList(Subscriber).init(allocator),
             .next_id = 1,
-            .mutex = .{},
+            .mutex = .init,
         };
     }
 
@@ -68,8 +68,8 @@ pub const EventBus = struct {
 
     /// Subscribe to specific event type
     pub fn subscribe(self: *EventBus, event_type: EventType, handler: EventHandler) !u64 {
-        self.mutex.lock();
-        defer self.mutex.unlock();
+        self.mutex.lockUncancelable(self.io);
+        defer self.mutex.unlock(self.io);
 
         const id = self.next_id;
         self.next_id += 1;
@@ -85,8 +85,8 @@ pub const EventBus = struct {
 
     /// Subscribe to all events
     pub fn subscribeAll(self: *EventBus, handler: EventHandler) !u64 {
-        self.mutex.lock();
-        defer self.mutex.unlock();
+        self.mutex.lockUncancelable(self.io);
+        defer self.mutex.unlock(self.io);
 
         const id = self.next_id;
         self.next_id += 1;
@@ -102,8 +102,8 @@ pub const EventBus = struct {
 
     /// Unsubscribe by ID
     pub fn unsubscribe(self: *EventBus, id: u64) void {
-        self.mutex.lock();
-        defer self.mutex.unlock();
+        self.mutex.lockUncancelable(self.io);
+        defer self.mutex.unlock(self.io);
 
         var i: usize = 0;
         while (i < self.subscribers.items.len) {
@@ -117,8 +117,8 @@ pub const EventBus = struct {
 
     /// Publish an event
     pub fn publish(self: *EventBus, event: Event) void {
-        self.mutex.lock();
-        defer self.mutex.unlock();
+        self.mutex.lockUncancelable(self.io);
+        defer self.mutex.unlock(self.io);
 
         for (self.subscribers.items) |subscriber| {
             // Call handler if subscribed to this event type or all events
@@ -136,7 +136,7 @@ pub const EventBus = struct {
 
 /// Global event bus
 var global_event_bus: ?EventBus = null;
-var global_event_bus_mutex: std.Thread.Mutex = .{};
+var global_event_bus_mutex: std.Io.Mutex = .init;
 
 /// Initialize global event bus
 pub fn initGlobal(allocator: std.mem.Allocator) !void {

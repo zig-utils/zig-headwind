@@ -217,14 +217,14 @@ test "parse very long class name" {
     const allocator = testing.allocator;
 
     // Create a class with 1000+ character name
-    var long_class = std.ArrayList(u8).init(allocator);
-    defer long_class.deinit();
+    var long_class: std.ArrayList(u8) = .empty;
+    defer long_class.deinit(allocator);
 
-    try long_class.appendSlice("hover:focus:active:md:lg:xl:");
+    try long_class.appendSlice(allocator, "hover:focus:active:md:lg:xl:");
     for (0..100) |_| {
-        try long_class.appendSlice("group-");
+        try long_class.appendSlice(allocator, "group-");
     }
-    try long_class.appendSlice("bg-blue-500");
+    try long_class.appendSlice(allocator, "bg-blue-500");
 
     var parsed = try class_parser.parseClass(allocator, long_class.items);
     defer parsed.deinit(allocator);
@@ -255,7 +255,8 @@ test "parse malformed brackets" {
         const result = class_parser.parseClass(allocator, class);
         // Should either handle gracefully or return error
         if (result) |parsed| {
-            parsed.deinit(allocator);
+            var owned = parsed;
+            owned.deinit(allocator);
         } else |_| {
             // Expected behavior
         }

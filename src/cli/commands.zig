@@ -222,10 +222,10 @@ fn watchCommand(allocator: std.mem.Allocator, io: std.Io, opts: CommandOptions) 
         }
     };
 
-    WatchContext.debouncer = @import("../watcher/file_watcher.zig").Debouncer.init(allocator, 300);
+    WatchContext.debouncer = @import("../watcher/file_watcher.zig").Debouncer.init(allocator, io, 300);
 
     // Create file watcher
-    var watcher = try @import("../watcher/file_watcher.zig").FileWatcher.init(allocator, WatchContext.onChange);
+    var watcher = try @import("../watcher/file_watcher.zig").FileWatcher.init(allocator, io, WatchContext.onChange);
     defer watcher.deinit();
 
     // Add content paths to watch
@@ -252,7 +252,7 @@ fn watchCommand(allocator: std.mem.Allocator, io: std.Io, opts: CommandOptions) 
 
     // Main loop: check for rebuild triggers
     while (true) {
-        std.posix.nanosleep(0, 100 * std.time.ns_per_ms);
+        try io.sleep(.{ .nanoseconds = 100 * std.time.ns_per_ms }, .awake);
 
         if (WatchContext.needs_rebuild.load(.seq_cst)) {
             WatchContext.needs_rebuild.store(false, .seq_cst);

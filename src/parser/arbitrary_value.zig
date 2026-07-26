@@ -116,8 +116,8 @@ pub fn escapeForCSS(allocator: std.mem.Allocator, value: []const u8) ![]const u8
 
 fn needsEscape(c: u8) bool {
     return c == '(' or c == ')' or c == '[' or c == ']' or
-           c == '{' or c == '}' or c == ',' or c == ':' or
-           c == '.' or c == '#' or c == ' ';
+        c == '{' or c == '}' or c == ',' or c == ':' or
+        c == '.' or c == '#' or c == ' ';
 }
 
 /// Extract opacity modifier from value (e.g., "blue-500/50" -> { color: "blue-500", opacity: "50" })

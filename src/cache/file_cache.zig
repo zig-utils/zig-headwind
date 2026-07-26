@@ -196,7 +196,7 @@ pub const FileCache = struct {
 
 test "FileCache basic operations" {
     const allocator = std.testing.allocator;
-    const io = std.testing.io();
+    const io = std.testing.io;
     const cache_dir = ".test-cache";
     const test_file = "test-cache-file.html";
 

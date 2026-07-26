@@ -383,10 +383,10 @@ fn getColorShade(color: []const u8, shade: []const u8) ?[]const u8 {
 pub const colors = struct {
     pub fn has(color_name: []const u8) bool {
         const supported_colors = [_][]const u8{
-            "red", "orange", "amber", "yellow", "lime", "green", "emerald", "teal",
-            "cyan", "sky", "blue", "indigo", "violet", "purple", "fuchsia", "pink",
-            "rose", "slate", "gray", "zinc", "neutral", "stone",
-            "inherit", "current", "transparent", "black", "white",
+            "red",         "orange", "amber", "yellow", "lime",    "green",  "emerald", "teal",
+            "cyan",        "sky",    "blue",  "indigo", "violet",  "purple", "fuchsia", "pink",
+            "rose",        "slate",  "gray",  "zinc",   "neutral", "stone",  "inherit", "current",
+            "transparent", "black",  "white",
         };
 
         for (supported_colors) |color| {

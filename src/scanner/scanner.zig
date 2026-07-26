@@ -186,7 +186,7 @@ test "Scanner basic" {
         .cache_enabled = false,
     };
 
-    var scanner = Scanner.init(allocator, config);
+    var scanner = Scanner.init(allocator, std.testing.io, config);
     defer scanner.deinit();
 
     // Scanner test would require actual files
