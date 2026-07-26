@@ -1275,7 +1275,7 @@ pub const GroupedSyntaxParser = struct {
             if (isVariantPrefix(potential_variant) and simd.simdIndexOfScalar(rest, '[') != null) {
                 // Recursively expand the rest, then prepend variant to each result
                 if (try self.parseAndExpand(rest)) |expanded| {
-                    var results: std.ArrayList([]const u8) = .{};
+                    var results: std.ArrayList([]const u8) = .empty;
                     errdefer {
                         for (results.items) |item| self.allocator.free(item);
                         results.deinit(self.allocator);
@@ -1331,7 +1331,7 @@ pub const GroupedSyntaxParser = struct {
 
         if (content.len == 0) return null;
 
-        var results: std.ArrayList([]const u8) = .{};
+        var results: std.ArrayList([]const u8) = .empty;
         errdefer {
             for (results.items) |item| self.allocator.free(item);
             results.deinit(self.allocator);
@@ -2186,7 +2186,7 @@ pub fn expandGroupedSyntax(allocator: std.mem.Allocator, class_str: []const u8) 
 
 /// Process a list of classes, expanding any grouped syntax patterns
 pub fn processClasses(allocator: std.mem.Allocator, classes: []const []const u8) ![][]const u8 {
-    var result: std.ArrayList([]const u8) = .{};
+    var result: std.ArrayList([]const u8) = .empty;
     errdefer {
         for (result.items) |item| allocator.free(item);
         result.deinit(allocator);

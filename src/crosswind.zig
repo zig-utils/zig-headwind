@@ -77,13 +77,15 @@ pub const version_patch = 0;
 /// Initialize crosswind with configuration
 pub const crosswind = struct {
     allocator: std.mem.Allocator,
+    io: std.Io,
     config: crosswindConfig,
     stats: types.Stats,
     scanner: ?Scanner,
 
-    pub fn init(alloc: std.mem.Allocator, cfg: crosswindConfig) !crosswind {
+    pub fn init(alloc: std.mem.Allocator, io: std.Io, cfg: crosswindConfig) !crosswind {
         return .{
             .allocator = alloc,
+            .io = io,
             .config = cfg,
             .stats = .{},
             .scanner = null,
@@ -98,12 +100,12 @@ pub const crosswind = struct {
 
     /// Build CSS from configuration
     pub fn build(self: *crosswind) ![]const u8 {
-        var timer = std.time.Timer.start() catch null;
-        defer {
-            if (timer) |*t| {
-                self.stats.total_duration_ns = @intCast(t.read());
-            }
-        }
+        // 0.17 removed std.time.Timer; monotonic time now comes from the Io
+        // instance, which is why the struct carries one.
+        const started = std.Io.Timestamp.now(self.io, .awake);
+        defer self.stats.total_duration_ns = @intCast(started.durationTo(
+            std.Io.Timestamp.now(self.io, .awake),
+        ).toNanoseconds());
 
         // Initialize scanner
         const scan_config = Scanner.ScanConfig{
@@ -116,7 +118,7 @@ pub const crosswind = struct {
             .grouped_syntax = self.config.groupedSyntax,
         };
 
-        var scanner = Scanner.init(self.allocator, scan_config);
+        var scanner = Scanner.init(self.allocator, self.io, scan_config);
         defer scanner.deinit();
 
         // Scan for class names

@@ -6,6 +6,7 @@ const string_utils = @import("../utils/string.zig");
 /// OPTIMIZED VERSION - significantly reduced file I/O and allocations
 pub const FileCache = struct {
     allocator: std.mem.Allocator,
+    io: std.Io,
     cache_dir: []const u8,
     entries: std.StringHashMap(CacheEntry),
     file_mtimes: std.StringHashMap(i128), // Track modification times instead of hashing
@@ -22,9 +23,10 @@ pub const FileCache = struct {
         }
     };
 
-    pub fn init(allocator: std.mem.Allocator, cache_dir: []const u8) FileCache {
+    pub fn init(allocator: std.mem.Allocator, io: std.Io, cache_dir: []const u8) FileCache {
         return .{
             .allocator = allocator,
+            .io = io,
             .cache_dir = cache_dir,
             .entries = std.StringHashMap(CacheEntry).init(allocator),
             .file_mtimes = std.StringHashMap(i128).init(allocator),
@@ -134,7 +136,7 @@ pub const FileCache = struct {
         self.file_mtimes.clearRetainingCapacity();
 
         // Clear disk cache directory if it exists
-        std.fs.cwd().deleteTree(self.cache_dir) catch |err| {
+        std.Io.Dir.cwd().deleteTree(self.io, self.cache_dir) catch |err| {
             if (err != error.FileNotFound) return err;
         };
     }
@@ -142,11 +144,9 @@ pub const FileCache = struct {
     /// Get file modification time (much faster than hashing entire file)
     /// OPTIMIZATION: Stat is ~1000x faster than reading + hashing file content
     fn getFileMtime(self: *FileCache, file_path: []const u8) !i128 {
-        _ = self;
-        const file = try std.fs.cwd().openFile(file_path, .{});
-        defer file.close();
-
-        const stat = try file.stat();
+        // 0.17: Dir.statFile avoids opening a handle just to stat it, and the
+        // File methods all take the Io now anyway.
+        const stat = try std.Io.Dir.cwd().statFile(self.io, file_path, .{});
         // In Zig 0.16+, mtime is a Timestamp struct with nanoseconds field
         return @intCast(stat.mtime.nanoseconds);
     }
@@ -196,18 +196,20 @@ pub const FileCache = struct {
 
 test "FileCache basic operations" {
     const allocator = std.testing.allocator;
+    const io = std.testing.io();
     const cache_dir = ".test-cache";
     const test_file = "test-cache-file.html";
 
     // Create a temporary test file
     {
-        const file = try std.fs.cwd().createFile(test_file, .{});
-        defer file.close();
-        try file.writeAll("<div class=\"flex items-center bg-blue-500\">Test</div>");
+        try std.Io.Dir.cwd().writeFile(io, .{
+            .sub_path = test_file,
+            .data = "<div class=\"flex items-center bg-blue-500\">Test</div>",
+        });
     }
-    defer std.fs.cwd().deleteFile(test_file) catch {};
+    defer std.Io.Dir.cwd().deleteFile(io, test_file) catch {};
 
-    var cache = FileCache.init(allocator, cache_dir);
+    var cache = FileCache.init(allocator, io, cache_dir);
     defer cache.deinit();
     defer cache.clear() catch {};
 

@@ -211,7 +211,7 @@ pub const CSSGenerator = struct {
     pub fn initWithConfig(allocator: std.mem.Allocator, config: Config) CSSGenerator {
         return .{
             .allocator = allocator,
-            .rules = .{},
+            .rules = .empty,
             .dark_mode_selector = config.dark_mode_selector,
             .dark_mode_strategy = config.dark_mode_strategy,
         };

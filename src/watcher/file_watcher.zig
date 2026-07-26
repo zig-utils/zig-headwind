@@ -11,7 +11,7 @@ pub const FileWatcher = struct {
     pub fn init(allocator: std.mem.Allocator, callback: *const fn (path: []const u8) void) !FileWatcher {
         return .{
             .allocator = allocator,
-            .paths = std.ArrayList([]const u8){},
+            .paths = .empty,
             .callback = callback,
             .running = std.atomic.Value(bool).init(false),
         };
@@ -93,16 +93,19 @@ pub const FileWatcher = struct {
 /// Debouncer to prevent rapid successive rebuilds
 pub const Debouncer = struct {
     allocator: std.mem.Allocator,
+    io: std.Io,
     delay_ms: u64,
-    timer: ?std.time.Timer,
-    last_event_ns: u64,
+    /// Monotonic nanoseconds of the last accepted event; 0 until the first.
+    /// 0.17 removed std.time.Timer, so elapsed time is the difference between
+    /// two Io timestamps rather than a timer's running count.
+    last_event_ns: i96,
     mutex: std.Thread.Mutex,
 
-    pub fn init(allocator: std.mem.Allocator, delay_ms: u64) Debouncer {
+    pub fn init(allocator: std.mem.Allocator, io: std.Io, delay_ms: u64) Debouncer {
         return .{
             .allocator = allocator,
+            .io = io,
             .delay_ms = delay_ms,
-            .timer = null,
             .last_event_ns = 0,
             .mutex = std.Thread.Mutex{},
         };
@@ -112,15 +115,17 @@ pub const Debouncer = struct {
         self.mutex.lock();
         defer self.mutex.unlock();
 
-        // Use Timer to get current time
-        if (self.timer == null) {
-            self.timer = std.time.Timer.start() catch return true;
+        const now_ns = std.Io.Timestamp.now(self.io, .awake).toNanoseconds();
+
+        // The very first event always fires: there is no previous timestamp to
+        // debounce against, and `0` would otherwise read as "long ago" only by
+        // accident of the epoch.
+        if (self.last_event_ns == 0) {
+            self.last_event_ns = now_ns;
+            return true;
         }
 
-        var timer = self.timer.?;
-        const now_ns = timer.read();
-        const elapsed_ms = (now_ns - self.last_event_ns) / std.time.ns_per_ms;
-
+        const elapsed_ms = @divTrunc(now_ns - self.last_event_ns, std.time.ns_per_ms);
         if (elapsed_ms >= self.delay_ms) {
             self.last_event_ns = now_ns;
             return true;

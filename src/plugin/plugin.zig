@@ -38,9 +38,9 @@ pub const PluginContext = struct {
         return .{
             .allocator = allocator,
             .config = config,
-            .base_styles = .{},
-            .component_styles = .{},
-            .utility_styles = .{},
+            .base_styles = .empty,
+            .component_styles = .empty,
+            .utility_styles = .empty,
             .custom_variants = std.StringHashMap(VariantDefinition).init(allocator),
         };
     }
@@ -226,7 +226,7 @@ pub const PluginRegistry = struct {
 
     pub fn init(allocator: std.mem.Allocator) PluginRegistry {
         return .{
-            .plugins = .{},
+            .plugins = .empty,
             .allocator = allocator,
         };
     }

@@ -52,7 +52,7 @@ pub inline fn simdFindMatchingBracket(str: []const u8, start: usize) ?usize {
 /// Fast colon and bracket scanning for variant parsing
 /// Returns positions of colons that are outside of brackets
 pub inline fn simdFindVariantSeparators(str: []const u8, allocator: std.mem.Allocator) ![]usize {
-    var positions: std.ArrayList(usize) = .{};
+    var positions: std.ArrayList(usize) = .empty;
     errdefer positions.deinit(allocator);
 
     if (str.len == 0) return positions.toOwnedSlice(allocator);

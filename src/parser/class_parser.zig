@@ -82,7 +82,7 @@ pub fn parseClass(allocator: std.mem.Allocator, class_str: []const u8) !ParsedCl
     }
 
     // OPTIMIZATION: SIMD-accelerated variant parsing
-    var variants: std.ArrayList(VariantInfo) = .{};
+    var variants: std.ArrayList(VariantInfo) = .empty;
     var last_colon: ?usize = null;
 
     // Use SIMD to find all variant separators (colons outside brackets)

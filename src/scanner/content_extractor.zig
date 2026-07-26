@@ -8,12 +8,14 @@ const grouped_syntax = @import("../parser/grouped_syntax.zig");
 /// Extract CSS class names from various file formats
 pub const ContentExtractor = struct {
     allocator: std.mem.Allocator,
+    io: std.Io,
     attributify_config: config_schema.AttributifyConfig,
     grouped_syntax_config: config_schema.GroupedSyntaxConfig,
 
-    pub fn init(allocator: std.mem.Allocator) ContentExtractor {
+    pub fn init(allocator: std.mem.Allocator, io: std.Io) ContentExtractor {
         return .{
             .allocator = allocator,
+            .io = io,
             .attributify_config = .{},
             .grouped_syntax_config = .{},
         };
@@ -21,11 +23,13 @@ pub const ContentExtractor = struct {
 
     pub fn initWithConfig(
         allocator: std.mem.Allocator,
+        io: std.Io,
         attributify_config: config_schema.AttributifyConfig,
         grouped_syntax_config: config_schema.GroupedSyntaxConfig,
     ) ContentExtractor {
         return .{
             .allocator = allocator,
+            .io = io,
             .attributify_config = attributify_config,
             .grouped_syntax_config = grouped_syntax_config,
         };
@@ -34,7 +38,7 @@ pub const ContentExtractor = struct {
     /// Extract class names from a file
     pub fn extractFromFile(self: *ContentExtractor, file_path: []const u8) ![][]const u8 {
         // Read file content
-        const content = try std.fs.cwd().readFileAlloc(
+        const content = try std.Io.Dir.cwd().readFileAlloc(self.io, 
             file_path,
             self.allocator,
             std.Io.Limit.limited(10 * 1024 * 1024), // 10MB max
@@ -64,7 +68,7 @@ pub const ContentExtractor = struct {
     /// Also extracts attributify mode utilities and grouped syntax patterns
     /// OPTIMIZED: Uses SIMD for pattern matching
     fn extractFromHTML(self: *ContentExtractor, content: []const u8) ![][]const u8 {
-        var classes: std.ArrayList([]const u8) = .{};
+        var classes: std.ArrayList([]const u8) = .empty;
         errdefer classes.deinit(self.allocator);
 
         var i: usize = 0;
@@ -292,7 +296,7 @@ pub const ContentExtractor = struct {
 
     /// Process grouped syntax patterns in extracted classes
     fn processGroupedSyntax(self: *ContentExtractor, classes: std.ArrayList([]const u8)) ![][]const u8 {
-        var result: std.ArrayList([]const u8) = .{};
+        var result: std.ArrayList([]const u8) = .empty;
         errdefer {
             for (result.items) |item| self.allocator.free(item);
             result.deinit(self.allocator);
@@ -325,7 +329,7 @@ pub const ContentExtractor = struct {
     /// Extract from JSX/TSX (className="..." and className={...})
     /// OPTIMIZED: Uses SIMD for pattern matching
     fn extractFromJSX(self: *ContentExtractor, content: []const u8) ![][]const u8 {
-        var classes: std.ArrayList([]const u8) = .{};
+        var classes: std.ArrayList([]const u8) = .empty;
         errdefer classes.deinit(self.allocator);
 
         var i: usize = 0;
@@ -415,7 +419,7 @@ pub const ContentExtractor = struct {
     fn extractFromVue(self: *ContentExtractor, content: []const u8) ![][]const u8 {
         // For Vue, we need to extract from <template> section
         // This is a simplified version - look for class and :class
-        var classes: std.ArrayList([]const u8) = .{};
+        var classes: std.ArrayList([]const u8) = .empty;
         errdefer classes.deinit(self.allocator);
 
         var i: usize = 0;

@@ -20,13 +20,13 @@ pub const StringBuilder = struct {
 
     pub fn init(allocator: std.mem.Allocator) StringBuilder {
         return .{
-            .buffer = std.ArrayList(u8){},
+            .buffer = .empty,
             .allocator = allocator,
         };
     }
 
     pub fn initCapacity(allocator: std.mem.Allocator, capacity: usize) !StringBuilder {
-        var buffer: std.ArrayList(u8) = .{};
+        var buffer: std.ArrayList(u8) = .empty;
         try buffer.ensureTotalCapacity(allocator, capacity);
         return .{
             .buffer = buffer,
@@ -70,7 +70,7 @@ pub const StringBuilder = struct {
 
 /// Case conversion utilities
 pub fn toKebabCase(allocator: std.mem.Allocator, str: []const u8) ![]u8 {
-    var result: std.ArrayList(u8) = .{};
+    var result: std.ArrayList(u8) = .empty;
     errdefer result.deinit(allocator);
 
     for (str, 0..) |char, i| {
@@ -90,7 +90,7 @@ pub fn toKebabCase(allocator: std.mem.Allocator, str: []const u8) ![]u8 {
 }
 
 pub fn toCamelCase(allocator: std.mem.Allocator, str: []const u8) ![]u8 {
-    var result: std.ArrayList(u8) = .{};
+    var result: std.ArrayList(u8) = .empty;
     errdefer result.deinit(allocator);
 
     var capitalize_next = false;
@@ -117,7 +117,7 @@ pub fn toCamelCase(allocator: std.mem.Allocator, str: []const u8) ![]u8 {
 
 /// Split string by delimiter
 pub fn split(allocator: std.mem.Allocator, str: []const u8, delimiter: u8) ![][]const u8 {
-    var parts: std.ArrayList([]const u8) = .{};
+    var parts: std.ArrayList([]const u8) = .empty;
     errdefer parts.deinit(allocator);
 
     var start: usize = 0;

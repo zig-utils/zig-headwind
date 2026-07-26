@@ -39,9 +39,17 @@ pub fn build(b: *std.Build) void {
     const run_cmd = b.addRunArtifact(exe);
     run_cmd.step.dependOn(b.getInstallStep());
 
-    if (b.args) |args| {
-        run_cmd.addArgs(args);
-    }
+    // `b.args` (the `zig build run -- ...` passthrough) was removed from
+    // std.Build in 0.17-dev. The replacement is an explicit, declared option,
+    // repeated once per argument — same pattern as the sibling zig-utils
+    // libraries:
+    //     zig build run -Drun-arg=build -Drun-arg=./src
+    const run_args = b.option(
+        []const []const u8,
+        "run-arg",
+        "Argument passed to the CLI; repeat the option for multiple arguments",
+    ) orelse &.{};
+    run_cmd.addArgs(run_args);
 
     const run_step = b.step("run", "Run the CLI");
     run_step.dependOn(&run_cmd.step);
@@ -94,8 +102,9 @@ pub fn build(b: *std.Build) void {
     bench_step.dependOn(&run_bench.step);
 
     // Format check
+    // 0.17-dev takes LazyPath values here, not string literals.
     const fmt_check = b.addFmt(.{
-        .paths = &.{ "src", "test" },
+        .paths = &.{ b.path("src"), b.path("test") },
         .check = true,
     });
 
