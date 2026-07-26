@@ -478,6 +478,16 @@ Target performance metrics vs Tailwind CSS:
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) (coming soon) for guidelines.
 
+## Community
+
+For help, discussion about best practices, or any other conversation that would benefit from being searchable:
+
+[Discussions on GitHub](https://github.com/cwcss/zig-crosswind/discussions)
+
+For casual chit-chat with others using this package:
+
+[Join the Stacks Discord Server](https://stacksjs.com/discord)
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
