@@ -5,18 +5,21 @@ const string_utils = @import("../utils/string.zig");
 /// File scanner for discovering source files
 pub const FileScanner = struct {
     allocator: std.mem.Allocator,
+    io: std.Io,
     include_patterns: []const []const u8,
     exclude_patterns: []const []const u8,
     base_path: []const u8,
 
     pub fn init(
         allocator: std.mem.Allocator,
+        io: std.Io,
         base_path: []const u8,
         include_patterns: []const []const u8,
         exclude_patterns: []const []const u8,
     ) FileScanner {
         return .{
             .allocator = allocator,
+            .io = io,
             .base_path = base_path,
             .include_patterns = include_patterns,
             .exclude_patterns = exclude_patterns,
@@ -25,7 +28,7 @@ pub const FileScanner = struct {
 
     /// Scan all files matching include patterns
     pub fn scan(self: *FileScanner) ![][]const u8 {
-        var files: std.ArrayList([]const u8) = .{};
+        var files: std.ArrayList([]const u8) = .empty;
         errdefer {
             for (files.items) |file| {
                 self.allocator.free(file);
@@ -34,8 +37,8 @@ pub const FileScanner = struct {
         }
 
         // Open base directory
-        var dir = try std.fs.cwd().openDir(self.base_path, .{ .iterate = true });
-        defer dir.close();
+        var dir = try std.Io.Dir.cwd().openDir(self.io, self.base_path, .{ .iterate = true });
+        defer dir.close(self.io);
 
         // Scan recursively
         try self.scanDir(dir, "", &files);
@@ -45,13 +48,13 @@ pub const FileScanner = struct {
 
     fn scanDir(
         self: *FileScanner,
-        dir: std.fs.Dir,
+        dir: std.Io.Dir,
         rel_path: []const u8,
         files: *std.ArrayList([]const u8),
     ) !void {
         var iter = dir.iterate();
 
-        while (try iter.next()) |entry| {
+        while (try iter.next(self.io)) |entry| {
             const full_rel_path = if (rel_path.len > 0)
                 try std.fs.path.join(self.allocator, &.{ rel_path, entry.name })
             else
@@ -66,8 +69,8 @@ pub const FileScanner = struct {
             switch (entry.kind) {
                 .directory => {
                     // Recursively scan subdirectory
-                    var subdir = try dir.openDir(entry.name, .{ .iterate = true });
-                    defer subdir.close();
+                    var subdir = try dir.openDir(self.io, entry.name, .{ .iterate = true });
+                    defer subdir.close(self.io);
                     try self.scanDir(subdir, full_rel_path, files);
                 },
                 .file => {

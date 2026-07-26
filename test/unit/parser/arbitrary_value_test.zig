@@ -141,7 +141,7 @@ test "parse unclosed bracket" {
 test "parse very long arbitrary value" {
     const allocator = testing.allocator;
 
-    const long_value = "w-[" ++ "x" ** 500 ++ "]";
+    const long_value = "w-[" ++ "x" * *500 ++ "]";
     const class_str = try std.fmt.allocPrint(allocator, "{s}", .{long_value});
     defer allocator.free(class_str);
 

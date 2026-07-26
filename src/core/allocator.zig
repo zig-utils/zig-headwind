@@ -127,7 +127,7 @@ pub fn ObjectPool(comptime T: type) type {
 }
 
 test "AllocatorManager" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
 
     var manager = AllocatorManager.init(gpa.allocator());
@@ -141,7 +141,7 @@ test "AllocatorManager" {
 }
 
 test "StringPool" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
 
     var pool = StringPool.init(gpa.allocator());
@@ -155,7 +155,7 @@ test "StringPool" {
 }
 
 test "ObjectPool" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
 
     const TestStruct = struct { value: u32 };

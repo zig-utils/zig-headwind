@@ -57,7 +57,7 @@ inline fn isCommonCalcPattern(value: []const u8) bool {
     if (value[value.len - 1] != ')') return false;
 
     // SIMD-accelerated content validation
-    const content = value[5..value.len-1];
+    const content = value[5 .. value.len - 1];
     return simd.simdIsValidCalcContent(content);
 }
 
@@ -82,7 +82,7 @@ pub fn parseClass(allocator: std.mem.Allocator, class_str: []const u8) !ParsedCl
     }
 
     // OPTIMIZATION: SIMD-accelerated variant parsing
-    var variants: std.ArrayList(VariantInfo) = .{};
+    var variants: std.ArrayList(VariantInfo) = .empty;
     var last_colon: ?usize = null;
 
     // Use SIMD to find all variant separators (colons outside brackets)
@@ -104,12 +104,12 @@ pub fn parseClass(allocator: std.mem.Allocator, class_str: []const u8) !ParsedCl
             if (simd.simdIndexOfScalar(variant_str, '/')) |slash_pos| {
                 // Named variant: "group/sidebar-hover"
                 const base = variant_str[0..slash_pos];
-                const rest = variant_str[slash_pos + 1..];
+                const rest = variant_str[slash_pos + 1 ..];
 
                 // Check for dash in rest using SIMD
                 if (simd.simdIndexOfScalar(rest, '-')) |dash_pos| {
                     variant_info.name = try allocator.dupe(u8, rest[0..dash_pos]);
-                    variant_info.variant = try std.fmt.allocPrint(allocator, "{s}-{s}", .{base, rest[dash_pos + 1..]});
+                    variant_info.variant = try std.fmt.allocPrint(allocator, "{s}-{s}", .{ base, rest[dash_pos + 1 ..] });
                 } else {
                     variant_info.variant = try allocator.dupe(u8, base);
                     variant_info.name = try allocator.dupe(u8, rest);
@@ -185,7 +185,7 @@ pub fn parseUtility(utility: []const u8) struct { name: []const u8, value: ?[]co
                     // Found the separator dash
                     return .{
                         .name = utility[0..i],
-                        .value = utility[i + 1..],
+                        .value = utility[i + 1 ..],
                     };
                 }
             },

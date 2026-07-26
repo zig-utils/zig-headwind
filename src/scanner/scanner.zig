@@ -9,6 +9,7 @@ const config_schema = @import("../config/schema.zig");
 /// Main scanner that coordinates file scanning and class extraction
 pub const Scanner = struct {
     allocator: std.mem.Allocator,
+    io: std.Io,
     config: ScanConfig,
     cache: FileCache,
     stats: Stats,
@@ -47,11 +48,12 @@ pub const Scanner = struct {
         }
     };
 
-    pub fn init(allocator: std.mem.Allocator, config: ScanConfig) Scanner {
+    pub fn init(allocator: std.mem.Allocator, io: std.Io, config: ScanConfig) Scanner {
         return .{
             .allocator = allocator,
+            .io = io,
             .config = config,
-            .cache = FileCache.init(allocator, config.cache_dir),
+            .cache = FileCache.init(allocator, io, config.cache_dir),
             .stats = .{},
         };
     }
@@ -63,12 +65,11 @@ pub const Scanner = struct {
     /// Scan all files and extract class names
     /// OPTIMIZED: Uses arena allocator for temporary allocations
     pub fn scan(self: *Scanner) ![][]const u8 {
-        var timer = std.time.Timer.start() catch null;
-        defer {
-            if (timer) |*t| {
-                self.stats.duration_ms = @intCast(t.read() / std.time.ns_per_ms);
-            }
-        }
+        const started = std.Io.Timestamp.now(self.io, .awake);
+        defer self.stats.duration_ms = @intCast(@divTrunc(
+            started.durationTo(std.Io.Timestamp.now(self.io, .awake)).toNanoseconds(),
+            std.time.ns_per_ms,
+        ));
 
         // OPTIMIZATION: Use arena for temporary allocations during scan
         var arena = std.heap.ArenaAllocator.init(self.allocator);
@@ -78,6 +79,7 @@ pub const Scanner = struct {
         // Initialize file scanner
         var file_scanner = FileScanner.init(
             temp_allocator,
+            self.io,
             self.config.base_path,
             self.config.include_patterns,
             self.config.exclude_patterns,
@@ -88,11 +90,12 @@ pub const Scanner = struct {
         self.stats.files_scanned = files.len;
 
         // OPTIMIZATION: Pre-allocate approximate capacity
-        var all_classes: std.ArrayList([]const u8) = .{};
+        var all_classes: std.ArrayList([]const u8) = .empty;
         try all_classes.ensureTotalCapacity(temp_allocator, files.len * 10); // Estimate ~10 classes per file
 
         var extractor = ContentExtractor.initWithConfig(
             temp_allocator,
+            self.io,
             self.config.attributify,
             self.config.grouped_syntax,
         );
@@ -145,7 +148,7 @@ pub const Scanner = struct {
         var seen = std.StringHashMap(void).init(self.allocator);
         defer seen.deinit();
 
-        var unique: std.ArrayList([]const u8) = .{};
+        var unique: std.ArrayList([]const u8) = .empty;
         errdefer {
             for (unique.items) |class| self.allocator.free(class);
             unique.deinit(self.allocator);
@@ -183,7 +186,7 @@ test "Scanner basic" {
         .cache_enabled = false,
     };
 
-    var scanner = Scanner.init(allocator, config);
+    var scanner = Scanner.init(allocator, std.testing.io, config);
     defer scanner.deinit();
 
     // Scanner test would require actual files

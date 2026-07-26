@@ -16,19 +16,19 @@ pub const ThreadPool = struct {
     threads: []std.Thread,
     work_queues: []WorkQueue, // Per-thread work queues for work stealing
     global_queue: WorkQueue, // Fallback global queue
-    queue_mutex: std.Thread.Mutex,
+    queue_mutex: std.Io.Mutex,
     queue_condition: std.Thread.Condition,
     shutdown: std.atomic.Value(bool),
     pending_work: std.atomic.Value(u32),
 
     const WorkQueue = struct {
         items: std.ArrayList(WorkItem),
-        mutex: std.Thread.Mutex,
+        mutex: std.Io.Mutex,
 
         fn init(allocator: std.mem.Allocator) WorkQueue {
             return .{
                 .items = std.ArrayList(WorkItem).init(allocator),
-                .mutex = .{},
+                .mutex = .init,
             };
         }
 
@@ -37,14 +37,14 @@ pub const ThreadPool = struct {
         }
 
         fn push(self: *WorkQueue, work: WorkItem) !void {
-            self.mutex.lock();
-            defer self.mutex.unlock();
+            self.mutex.lockUncancelable(self.io);
+            defer self.mutex.unlock(self.io);
             try self.items.append(work);
         }
 
         fn pop(self: *WorkQueue) ?WorkItem {
-            self.mutex.lock();
-            defer self.mutex.unlock();
+            self.mutex.lockUncancelable(self.io);
+            defer self.mutex.unlock(self.io);
             if (self.items.items.len > 0) {
                 return self.items.orderedRemove(0);
             }
@@ -52,8 +52,8 @@ pub const ThreadPool = struct {
         }
 
         fn steal(self: *WorkQueue) ?WorkItem {
-            self.mutex.lock();
-            defer self.mutex.unlock();
+            self.mutex.lockUncancelable(self.io);
+            defer self.mutex.unlock(self.io);
             if (self.items.items.len > 0) {
                 // Steal from the end for better cache behavior
                 return self.items.pop();
@@ -62,8 +62,8 @@ pub const ThreadPool = struct {
         }
 
         fn len(self: *WorkQueue) usize {
-            self.mutex.lock();
-            defer self.mutex.unlock();
+            self.mutex.lockUncancelable(self.io);
+            defer self.mutex.unlock(self.io);
             return self.items.items.len;
         }
     };
@@ -79,7 +79,7 @@ pub const ThreadPool = struct {
             .threads = try allocator.alloc(std.Thread, thread_count),
             .work_queues = try allocator.alloc(WorkQueue, thread_count),
             .global_queue = WorkQueue.init(allocator),
-            .queue_mutex = .{},
+            .queue_mutex = .init,
             .queue_condition = .{},
             .shutdown = std.atomic.Value(bool).init(false),
             .pending_work = std.atomic.Value(u32).init(0),

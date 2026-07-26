@@ -78,20 +78,20 @@ pub fn parseCommand(args: []const []const u8) !struct { cmd: Command, opts: Comm
     return .{ .cmd = cmd, .opts = opts };
 }
 
-pub fn executeCommand(allocator: std.mem.Allocator, cmd: Command, opts: CommandOptions) !void {
+pub fn executeCommand(allocator: std.mem.Allocator, io: std.Io, cmd: Command, opts: CommandOptions) !void {
     switch (cmd) {
-        .init => try initCommand(allocator, opts),
-        .build => try buildCommand(allocator, opts),
-        .watch => try watchCommand(allocator, opts),
+        .init => try initCommand(allocator, io, opts),
+        .build => try buildCommand(allocator, io, opts),
+        .watch => try watchCommand(allocator, io, opts),
         .check => try checkCommand(allocator, opts),
-        .clean => try cleanCommand(allocator, opts),
-        .info => try infoCommand(allocator, opts),
+        .clean => try cleanCommand(allocator, io, opts),
+        .info => try infoCommand(allocator, io, opts),
         .help => printHelp(),
         .version => printVersion(),
     }
 }
 
-fn initCommand(allocator: std.mem.Allocator, opts: CommandOptions) !void {
+fn initCommand(allocator: std.mem.Allocator, io: std.Io, opts: CommandOptions) !void {
     _ = opts;
 
     std.debug.print("Initializing crosswind project...\n", .{});
@@ -107,10 +107,13 @@ fn initCommand(allocator: std.mem.Allocator, opts: CommandOptions) !void {
         \\}
     ;
 
-    const file = try std.fs.cwd().createFile("crosswind.config.json", .{});
-    defer file.close();
-
-    try file.writeAll(config_content);
+    // `Dir.writeFile` replaces create + writeAll: 0.17's Io.File writes through
+    // a `writer(io, buffer)` rather than exposing `writeAll` directly, and the
+    // one-shot helper is what that collapses to for a whole-file write.
+    try std.Io.Dir.cwd().writeFile(io, .{
+        .sub_path = "crosswind.config.json",
+        .data = config_content,
+    });
 
     // Create input CSS file
     const input_css =
@@ -120,10 +123,10 @@ fn initCommand(allocator: std.mem.Allocator, opts: CommandOptions) !void {
         \\
     ;
 
-    const css_file = try std.fs.cwd().createFile("src/input.css", .{ .truncate = false });
-    defer css_file.close();
-
-    try css_file.writeAll(input_css);
+    try std.Io.Dir.cwd().writeFile(io, .{
+        .sub_path = "src/input.css",
+        .data = input_css,
+    });
 
     std.debug.print("✓ Created crosswind.config.json\n", .{});
     std.debug.print("✓ Created src/input.css\n", .{});
@@ -131,7 +134,7 @@ fn initCommand(allocator: std.mem.Allocator, opts: CommandOptions) !void {
     _ = allocator;
 }
 
-fn buildCommand(allocator: std.mem.Allocator, opts: CommandOptions) !void {
+fn buildCommand(allocator: std.mem.Allocator, io: std.Io, opts: CommandOptions) !void {
     if (!opts.quiet) {
         std.debug.print("Building CSS...\n", .{});
     }
@@ -156,7 +159,7 @@ fn buildCommand(allocator: std.mem.Allocator, opts: CommandOptions) !void {
     }
 
     // Initialize crosswind
-    var hw = try crosswind.crosswind.init(allocator, config_result.value);
+    var hw = try crosswind.crosswind.init(allocator, io, config_result.value);
     defer hw.deinit();
 
     // Build (includes scanning and CSS generation)
@@ -178,25 +181,23 @@ fn buildCommand(allocator: std.mem.Allocator, opts: CommandOptions) !void {
 
     // Create output directory if it doesn't exist
     if (std.fs.path.dirname(output_path)) |dir| {
-        std.fs.cwd().makePath(dir) catch {};
+        std.Io.Dir.cwd().createDirPath(io, dir) catch {};
     }
 
-    const output_file = try std.fs.cwd().createFile(output_path, .{});
-    defer output_file.close();
-
-    try output_file.writeAll(css);
+    try std.Io.Dir.cwd().writeFile(io, .{ .sub_path = output_path, .data = css });
 
     if (!opts.quiet) {
         std.debug.print("✓ Built successfully to {s}\n", .{output_path});
 
-        // Show file size
-        const stat = try output_file.stat();
-        const size_kb = @as(f64, @floatFromInt(stat.size)) / 1024.0;
+        // Size comes from the written bytes rather than a stat: the file is no
+        // longer held open (writeFile closes it), and `css.len` is exactly what
+        // was just written.
+        const size_kb = @as(f64, @floatFromInt(css.len)) / 1024.0;
         std.debug.print("  Size: {d:.2} KB\n", .{size_kb});
     }
 }
 
-fn watchCommand(allocator: std.mem.Allocator, opts: CommandOptions) !void {
+fn watchCommand(allocator: std.mem.Allocator, io: std.Io, opts: CommandOptions) !void {
     std.debug.print("Starting watch mode...\n", .{});
 
     // Load configuration
@@ -221,10 +222,10 @@ fn watchCommand(allocator: std.mem.Allocator, opts: CommandOptions) !void {
         }
     };
 
-    WatchContext.debouncer = @import("../watcher/file_watcher.zig").Debouncer.init(allocator, 300);
+    WatchContext.debouncer = @import("../watcher/file_watcher.zig").Debouncer.init(allocator, io, 300);
 
     // Create file watcher
-    var watcher = try @import("../watcher/file_watcher.zig").FileWatcher.init(allocator, WatchContext.onChange);
+    var watcher = try @import("../watcher/file_watcher.zig").FileWatcher.init(allocator, io, WatchContext.onChange);
     defer watcher.deinit();
 
     // Add content paths to watch
@@ -240,7 +241,7 @@ fn watchCommand(allocator: std.mem.Allocator, opts: CommandOptions) !void {
 
     // Initial build
     std.debug.print("\nInitial build...\n", .{});
-    try buildCommand(allocator, opts);
+    try buildCommand(allocator, io, opts);
 
     // Start watching in a separate thread
     const watch_thread = try std.Thread.spawn(.{}, struct {
@@ -251,13 +252,13 @@ fn watchCommand(allocator: std.mem.Allocator, opts: CommandOptions) !void {
 
     // Main loop: check for rebuild triggers
     while (true) {
-        std.posix.nanosleep(0, 100 * std.time.ns_per_ms);
+        try io.sleep(.{ .nanoseconds = 100 * std.time.ns_per_ms }, .awake);
 
         if (WatchContext.needs_rebuild.load(.seq_cst)) {
             WatchContext.needs_rebuild.store(false, .seq_cst);
 
             std.debug.print("\n🔄 Change detected, rebuilding...\n", .{});
-            buildCommand(allocator, opts) catch |err| {
+            buildCommand(allocator, io, opts) catch |err| {
                 std.debug.print("Build error: {}\n", .{err});
                 continue;
             };
@@ -281,11 +282,11 @@ fn checkCommand(allocator: std.mem.Allocator, opts: CommandOptions) !void {
     std.debug.print("  Content files: {d}\n", .{config.content.files.len});
 }
 
-fn cleanCommand(allocator: std.mem.Allocator, opts: CommandOptions) !void {
+fn cleanCommand(allocator: std.mem.Allocator, io: std.Io, opts: CommandOptions) !void {
     std.debug.print("Cleaning cache...\n", .{});
 
     // Remove cache directory
-    std.fs.cwd().deleteTree(".crosswind-cache") catch |err| {
+    std.Io.Dir.cwd().deleteTree(io, ".crosswind-cache") catch |err| {
         if (err != error.FileNotFound) {
             return err;
         }
@@ -297,14 +298,14 @@ fn cleanCommand(allocator: std.mem.Allocator, opts: CommandOptions) !void {
     _ = opts;
 }
 
-fn infoCommand(allocator: std.mem.Allocator, opts: CommandOptions) !void {
+fn infoCommand(allocator: std.mem.Allocator, io: std.Io, opts: CommandOptions) !void {
     std.debug.print("crosswind CSS Framework\n", .{});
     std.debug.print("Version: 0.1.0\n", .{});
     std.debug.print("Zig Version: {s}\n", .{@import("builtin").zig_version_string});
 
     const config_path = opts.config_path orelse "crosswind.config.json";
     const config_exists = blk: {
-        std.fs.cwd().access(config_path, .{}) catch {
+        std.Io.Dir.cwd().access(io, config_path, .{}) catch {
             break :blk false;
         };
         break :blk true;

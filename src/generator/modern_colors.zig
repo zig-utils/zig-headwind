@@ -20,7 +20,7 @@ pub fn generateOklchColor(
     if (std.mem.indexOf(u8, oklch_str, "_") == null) return;
 
     // Replace underscores with spaces and add "deg" to hue
-    var color_value = std.ArrayList(u8){};
+    var color_value: std.ArrayList(u8) = .empty;
     defer color_value.deinit(generator.allocator);
 
     try color_value.appendSlice(generator.allocator, "oklch(");
@@ -59,7 +59,7 @@ pub fn generateColorMix(
     const mix_str = value.?;
 
     // Simple approach: replace underscores with spaces
-    var color_value = std.ArrayList(u8){};
+    var color_value: std.ArrayList(u8) = .empty;
     defer color_value.deinit(generator.allocator);
 
     try color_value.appendSlice(generator.allocator, "color-mix(");
@@ -132,7 +132,7 @@ pub fn generateRgbColor(
     // Modern rgb syntax: rgb(r g b / alpha)
     const rgb_str = value.?;
 
-    var color_value = std.ArrayList(u8){};
+    var color_value: std.ArrayList(u8) = .empty;
     defer color_value.deinit(generator.allocator);
 
     try color_value.appendSlice(generator.allocator, "rgb(");
@@ -167,7 +167,7 @@ pub fn generateHslColor(
     // Modern hsl syntax: hsl(h s l / alpha)
     const hsl_str = value.?;
 
-    var color_value = std.ArrayList(u8){};
+    var color_value: std.ArrayList(u8) = .empty;
     defer color_value.deinit(generator.allocator);
 
     try color_value.appendSlice(generator.allocator, "hsl(");

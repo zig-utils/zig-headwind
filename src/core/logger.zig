@@ -40,12 +40,12 @@ pub const LoggerConfig = struct {
 /// Global logger instance
 pub const Logger = struct {
     config: LoggerConfig,
-    mutex: std.Thread.Mutex,
+    mutex: std.Io.Mutex,
 
     pub fn init(config: LoggerConfig) Logger {
         return .{
             .config = config,
-            .mutex = .{},
+            .mutex = .init,
         };
     }
 
@@ -72,17 +72,17 @@ pub const Logger = struct {
     /// Core logging function
     pub fn log(self: *Logger, level: LogLevel, comptime fmt: []const u8, args: anytype) void {
         // Check if this log level should be printed
-        if (@intFromEnum(level) < @intFromEnum(self.config.level)) {
+        if (@backingInt(level) < @backingInt(self.config.level)) {
             return;
         }
 
-        self.mutex.lock();
-        defer self.mutex.unlock();
+        self.mutex.lockUncancelable(self.io);
+        defer self.mutex.unlock(self.io);
 
         // Use std.debug.print which handles stderr correctly
         if (self.config.use_color) {
             if (self.config.include_level) {
-                std.debug.print("{s}[{s}] " ++ fmt ++ "\x1b[0m\n", .{level.color(), level.toString()} ++ args);
+                std.debug.print("{s}[{s}] " ++ fmt ++ "\x1b[0m\n", .{ level.color(), level.toString() } ++ args);
             } else {
                 std.debug.print("{s}" ++ fmt ++ "\x1b[0m\n", .{level.color()} ++ args);
             }
@@ -108,7 +108,7 @@ pub const Logger = struct {
 
 /// Global logger instance
 var global_logger: ?Logger = null;
-var global_logger_mutex: std.Thread.Mutex = .{};
+var global_logger_mutex: std.Io.Mutex = .init;
 
 /// Initialize global logger
 pub fn initGlobal(config: LoggerConfig) void {

@@ -8,12 +8,14 @@ const grouped_syntax = @import("../parser/grouped_syntax.zig");
 /// Extract CSS class names from various file formats
 pub const ContentExtractor = struct {
     allocator: std.mem.Allocator,
+    io: std.Io,
     attributify_config: config_schema.AttributifyConfig,
     grouped_syntax_config: config_schema.GroupedSyntaxConfig,
 
-    pub fn init(allocator: std.mem.Allocator) ContentExtractor {
+    pub fn init(allocator: std.mem.Allocator, io: std.Io) ContentExtractor {
         return .{
             .allocator = allocator,
+            .io = io,
             .attributify_config = .{},
             .grouped_syntax_config = .{},
         };
@@ -21,11 +23,13 @@ pub const ContentExtractor = struct {
 
     pub fn initWithConfig(
         allocator: std.mem.Allocator,
+        io: std.Io,
         attributify_config: config_schema.AttributifyConfig,
         grouped_syntax_config: config_schema.GroupedSyntaxConfig,
     ) ContentExtractor {
         return .{
             .allocator = allocator,
+            .io = io,
             .attributify_config = attributify_config,
             .grouped_syntax_config = grouped_syntax_config,
         };
@@ -34,7 +38,8 @@ pub const ContentExtractor = struct {
     /// Extract class names from a file
     pub fn extractFromFile(self: *ContentExtractor, file_path: []const u8) ![][]const u8 {
         // Read file content
-        const content = try std.fs.cwd().readFileAlloc(
+        const content = try std.Io.Dir.cwd().readFileAlloc(
+            self.io,
             file_path,
             self.allocator,
             std.Io.Limit.limited(10 * 1024 * 1024), // 10MB max
@@ -64,7 +69,7 @@ pub const ContentExtractor = struct {
     /// Also extracts attributify mode utilities and grouped syntax patterns
     /// OPTIMIZED: Uses SIMD for pattern matching
     fn extractFromHTML(self: *ContentExtractor, content: []const u8) ![][]const u8 {
-        var classes: std.ArrayList([]const u8) = .{};
+        var classes: std.ArrayList([]const u8) = .empty;
         errdefer classes.deinit(self.allocator);
 
         var i: usize = 0;
@@ -253,35 +258,39 @@ pub const ContentExtractor = struct {
     fn isKnownVariant(str: []const u8) bool {
         const variants = [_][]const u8{
             // Responsive
-            "sm",              "md",              "lg",              "xl",              "2xl",
+            "sm",            "md",            "lg",            "xl",           "2xl",
             // State
-            "hover",           "focus",           "active",          "visited",         "disabled",
-            "enabled",         "checked",         "indeterminate",   "default",         "required",
-            "valid",           "invalid",         "in-range",        "out-of-range",    "placeholder-shown",
-            "autofill",        "read-only",
+            "hover",         "focus",         "active",        "visited",      "disabled",
+            "enabled",       "checked",       "indeterminate", "default",      "required",
+            "valid",         "invalid",       "in-range",      "out-of-range", "placeholder-shown",
+            "autofill",      "read-only",
             // First/last/odd/even
-            "first",           "last",            "odd",             "even",            "only",
-            "first-of-type",   "last-of-type",    "empty",
+                "first",         "last",         "odd",
+            "even",          "only",          "first-of-type", "last-of-type", "empty",
             // Focus
-            "focus-within",    "focus-visible",
+            "focus-within",  "focus-visible",
             // Dark mode
             "dark",
             // Print
-            "print",
+                     "print",
             // Motion
-            "motion-safe",     "motion-reduce",
+                   "motion-safe",
+            "motion-reduce",
             // Contrast
-            "contrast-more",   "contrast-less",
+            "contrast-more", "contrast-less",
             // Content
-            "before",          "after",           "selection",       "marker",          "file",
+            "before",       "after",
+            "selection",     "marker",        "file",
             // RTL/LTR
-            "rtl",             "ltr",
+                     "rtl",          "ltr",
             // Orientation
-            "portrait",        "landscape",
+            "portrait",      "landscape",
             // Group/Peer
-            "group-hover",     "group-focus",     "peer-hover",      "peer-focus",
+                "group-hover",   "group-focus",  "peer-hover",
+            "peer-focus",
             // Container queries
-            "@sm",             "@md",             "@lg",             "@xl",             "@2xl",
+               "@sm",           "@md",           "@lg",          "@xl",
+            "@2xl",
         };
 
         for (variants) |v| {
@@ -292,7 +301,7 @@ pub const ContentExtractor = struct {
 
     /// Process grouped syntax patterns in extracted classes
     fn processGroupedSyntax(self: *ContentExtractor, classes: std.ArrayList([]const u8)) ![][]const u8 {
-        var result: std.ArrayList([]const u8) = .{};
+        var result: std.ArrayList([]const u8) = .empty;
         errdefer {
             for (result.items) |item| self.allocator.free(item);
             result.deinit(self.allocator);
@@ -325,7 +334,7 @@ pub const ContentExtractor = struct {
     /// Extract from JSX/TSX (className="..." and className={...})
     /// OPTIMIZED: Uses SIMD for pattern matching
     fn extractFromJSX(self: *ContentExtractor, content: []const u8) ![][]const u8 {
-        var classes: std.ArrayList([]const u8) = .{};
+        var classes: std.ArrayList([]const u8) = .empty;
         errdefer classes.deinit(self.allocator);
 
         var i: usize = 0;
@@ -415,7 +424,7 @@ pub const ContentExtractor = struct {
     fn extractFromVue(self: *ContentExtractor, content: []const u8) ![][]const u8 {
         // For Vue, we need to extract from <template> section
         // This is a simplified version - look for class and :class
-        var classes: std.ArrayList([]const u8) = .{};
+        var classes: std.ArrayList([]const u8) = .empty;
         errdefer classes.deinit(self.allocator);
 
         var i: usize = 0;
@@ -547,7 +556,7 @@ fn getFileExtension(path: []const u8) []const u8 {
 
 test "extractFromHTML" {
     const allocator = std.testing.allocator;
-    var extractor = ContentExtractor.init(allocator);
+    var extractor = ContentExtractor.init(allocator, std.testing.io);
 
     const html =
         \\<div class="flex items-center justify-between">
@@ -568,7 +577,7 @@ test "extractFromHTML" {
 
 test "extractFromJSX" {
     const allocator = std.testing.allocator;
-    var extractor = ContentExtractor.init(allocator);
+    var extractor = ContentExtractor.init(allocator, std.testing.io);
 
     const jsx =
         \\<div className="flex items-center">
@@ -589,6 +598,7 @@ test "extractFromHTML with attributify mode" {
     const allocator = std.testing.allocator;
     var extractor = ContentExtractor.initWithConfig(
         allocator,
+        std.testing.io,
         .{ .enabled = true, .strict = true },
         .{},
     );
@@ -613,6 +623,7 @@ test "extractFromHTML with grouped syntax" {
     const allocator = std.testing.allocator;
     var extractor = ContentExtractor.initWithConfig(
         allocator,
+        std.testing.io,
         .{},
         .{ .enabled = true },
     );
@@ -637,6 +648,7 @@ test "extractFromHTML with reset utility" {
     const allocator = std.testing.allocator;
     var extractor = ContentExtractor.initWithConfig(
         allocator,
+        std.testing.io,
         .{},
         .{ .enabled = true },
     );
@@ -660,6 +672,7 @@ test "extractFromHTML with attributify variant syntax" {
     const allocator = std.testing.allocator;
     var extractor = ContentExtractor.initWithConfig(
         allocator,
+        std.testing.io,
         .{ .enabled = true, .strict = false, .prefix = "hw-" },
         .{},
     );

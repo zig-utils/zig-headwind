@@ -195,13 +195,13 @@ pub const CSSGenerator = struct {
     dark_mode_strategy: DarkModeStrategy,
 
     pub const DarkModeStrategy = enum {
-        @"class",
+        class,
         media,
     };
 
     pub const Config = struct {
         dark_mode_selector: []const u8 = "dark",
-        dark_mode_strategy: DarkModeStrategy = .@"class",
+        dark_mode_strategy: DarkModeStrategy = .class,
     };
 
     pub fn init(allocator: std.mem.Allocator) CSSGenerator {
@@ -211,7 +211,7 @@ pub const CSSGenerator = struct {
     pub fn initWithConfig(allocator: std.mem.Allocator, config: Config) CSSGenerator {
         return .{
             .allocator = allocator,
-            .rules = .{},
+            .rules = .empty,
             .dark_mode_selector = config.dark_mode_selector,
             .dark_mode_strategy = config.dark_mode_strategy,
         };
@@ -256,13 +256,16 @@ pub const CSSGenerator = struct {
             // This is flex-row, flex-col, flex-1, etc.
             const val = utility_parts.value.?;
             if (std.mem.eql(u8, val, "row") or std.mem.eql(u8, val, "row-reverse") or
-                std.mem.eql(u8, val, "col") or std.mem.eql(u8, val, "col-reverse")) {
+                std.mem.eql(u8, val, "col") or std.mem.eql(u8, val, "col-reverse"))
+            {
                 try self.generateFlexDirection(parsed, val);
             } else if (std.mem.eql(u8, val, "wrap") or std.mem.eql(u8, val, "wrap-reverse") or
-                       std.mem.eql(u8, val, "nowrap")) {
+                std.mem.eql(u8, val, "nowrap"))
+            {
                 try self.generateFlexWrap(parsed, val);
             } else if (std.mem.eql(u8, val, "1") or std.mem.eql(u8, val, "auto") or
-                       std.mem.eql(u8, val, "initial") or std.mem.eql(u8, val, "none")) {
+                std.mem.eql(u8, val, "initial") or std.mem.eql(u8, val, "none"))
+            {
                 try self.generateFlexValue(parsed, val);
             } else if (std.mem.startsWith(u8, val, "grow")) {
                 try self.generateFlexGrowValue(parsed, if (std.mem.eql(u8, val, "grow")) null else val[5..]); // "grow" or "grow-0" -> null or "0"
@@ -460,7 +463,8 @@ pub const CSSGenerator = struct {
             // Check for text-wrap utilities
             if (utility_parts.value) |val| {
                 if (std.mem.eql(u8, val, "wrap") or std.mem.eql(u8, val, "nowrap") or
-                    std.mem.eql(u8, val, "balance") or std.mem.eql(u8, val, "pretty")) {
+                    std.mem.eql(u8, val, "balance") or std.mem.eql(u8, val, "pretty"))
+                {
                     try self.generateTextWrap(parsed, utility_parts.value);
                     return; // Early return to avoid further checks
                 }
@@ -504,15 +508,18 @@ pub const CSSGenerator = struct {
         } else if (std.mem.eql(u8, utility_name, "italic") or std.mem.eql(u8, parsed.utility, "not-italic")) {
             try self.generateFontStyle(parsed);
         } else if (std.mem.eql(u8, utility_name, "underline") or std.mem.eql(u8, utility_name, "overline") or
-                   std.mem.eql(u8, parsed.utility, "line-through") or std.mem.eql(u8, parsed.utility, "no-underline")) {
+            std.mem.eql(u8, parsed.utility, "line-through") or std.mem.eql(u8, parsed.utility, "no-underline"))
+        {
             try self.generateTextDecoration(parsed);
         } else if (std.mem.eql(u8, utility_name, "decoration") and utility_parts.value != null) {
             try self.generateDecorationStyle(parsed, utility_parts.value.?);
         } else if (std.mem.eql(u8, utility_name, "uppercase") or std.mem.eql(u8, utility_name, "lowercase") or
-                   std.mem.eql(u8, utility_name, "capitalize") or std.mem.eql(u8, parsed.utility, "normal-case")) {
+            std.mem.eql(u8, utility_name, "capitalize") or std.mem.eql(u8, parsed.utility, "normal-case"))
+        {
             try self.generateTextTransform(parsed);
         } else if (std.mem.eql(u8, utility_name, "truncate") or std.mem.eql(u8, parsed.utility, "text-ellipsis") or
-                   std.mem.eql(u8, parsed.utility, "text-clip")) {
+            std.mem.eql(u8, parsed.utility, "text-clip"))
+        {
             try self.generateTextOverflow(parsed);
         } else if (std.mem.startsWith(u8, utility_name, "leading")) {
             try self.generateLineHeight(parsed, utility_parts.value);
@@ -541,7 +548,8 @@ pub const CSSGenerator = struct {
         } else if (std.mem.eql(u8, utility_name, "break")) {
             if (utility_parts.value) |val| {
                 if (std.mem.eql(u8, val, "normal") or std.mem.eql(u8, val, "words") or
-                    std.mem.eql(u8, val, "all") or std.mem.eql(u8, val, "keep")) {
+                    std.mem.eql(u8, val, "all") or std.mem.eql(u8, val, "keep"))
+                {
                     try self.generateWordBreak(parsed, utility_parts.value);
                 }
             }
@@ -586,8 +594,9 @@ pub const CSSGenerator = struct {
                     // bg-auto, bg-cover, bg-contain
                     try self.generateBackgroundSize(parsed, val);
                 } else if (std.mem.startsWith(u8, val, "bottom") or std.mem.startsWith(u8, val, "center") or
-                           std.mem.startsWith(u8, val, "left") or std.mem.startsWith(u8, val, "right") or
-                           std.mem.startsWith(u8, val, "top")) {
+                    std.mem.startsWith(u8, val, "left") or std.mem.startsWith(u8, val, "right") or
+                    std.mem.startsWith(u8, val, "top"))
+                {
                     // bg-bottom, bg-center, bg-left, bg-left-bottom, bg-left-top, bg-right, etc.
                     try self.generateBackgroundPosition(parsed, val);
                 } else {
@@ -928,7 +937,7 @@ pub const CSSGenerator = struct {
             .dark_mode => {
                 // Dark mode: use configured strategy
                 switch (self.dark_mode_strategy) {
-                    .@"class" => {
+                    .class => {
                         // Class strategy: use parent selector
                         const selector_prefix = try std.fmt.allocPrint(
                             self.allocator,
@@ -1233,13 +1242,15 @@ pub const CSSGenerator = struct {
             std.mem.eql(u8, val, "3xl") or std.mem.eql(u8, val, "4xl") or
             std.mem.eql(u8, val, "5xl") or std.mem.eql(u8, val, "6xl") or
             std.mem.eql(u8, val, "7xl") or std.mem.eql(u8, val, "8xl") or
-            std.mem.eql(u8, val, "9xl")) {
+            std.mem.eql(u8, val, "9xl"))
+        {
             return typography.generateFontSize(self, parsed, val);
         }
         // text-left, text-center, text-right, etc. -> text align
         else if (std.mem.eql(u8, val, "left") or std.mem.eql(u8, val, "center") or
-                 std.mem.eql(u8, val, "right") or std.mem.eql(u8, val, "justify") or
-                 std.mem.eql(u8, val, "start") or std.mem.eql(u8, val, "end")) {
+            std.mem.eql(u8, val, "right") or std.mem.eql(u8, val, "justify") or
+            std.mem.eql(u8, val, "start") or std.mem.eql(u8, val, "end"))
+        {
             return typography.generateTextAlign(self, parsed, val);
         }
     }
@@ -1250,21 +1261,23 @@ pub const CSSGenerator = struct {
         // Route to appropriate typography function based on value
         // font-sans, font-serif, font-mono -> font family
         if (std.mem.eql(u8, val, "sans") or std.mem.eql(u8, val, "serif") or
-            std.mem.eql(u8, val, "mono")) {
+            std.mem.eql(u8, val, "mono"))
+        {
             return typography.generateFontFamily(self, parsed, val);
         }
         // font-thin, font-normal, font-bold, etc. -> font weight
         else if (std.mem.eql(u8, val, "thin") or std.mem.eql(u8, val, "extralight") or
-                 std.mem.eql(u8, val, "light") or std.mem.eql(u8, val, "normal") or
-                 std.mem.eql(u8, val, "medium") or std.mem.eql(u8, val, "semibold") or
-                 std.mem.eql(u8, val, "bold") or std.mem.eql(u8, val, "extrabold") or
-                 std.mem.eql(u8, val, "black") or
-                 // Numeric weights
-                 std.mem.eql(u8, val, "100") or std.mem.eql(u8, val, "200") or
-                 std.mem.eql(u8, val, "300") or std.mem.eql(u8, val, "400") or
-                 std.mem.eql(u8, val, "500") or std.mem.eql(u8, val, "600") or
-                 std.mem.eql(u8, val, "700") or std.mem.eql(u8, val, "800") or
-                 std.mem.eql(u8, val, "900")) {
+            std.mem.eql(u8, val, "light") or std.mem.eql(u8, val, "normal") or
+            std.mem.eql(u8, val, "medium") or std.mem.eql(u8, val, "semibold") or
+            std.mem.eql(u8, val, "bold") or std.mem.eql(u8, val, "extrabold") or
+            std.mem.eql(u8, val, "black") or
+            // Numeric weights
+            std.mem.eql(u8, val, "100") or std.mem.eql(u8, val, "200") or
+            std.mem.eql(u8, val, "300") or std.mem.eql(u8, val, "400") or
+            std.mem.eql(u8, val, "500") or std.mem.eql(u8, val, "600") or
+            std.mem.eql(u8, val, "700") or std.mem.eql(u8, val, "800") or
+            std.mem.eql(u8, val, "900"))
+        {
             return typography.generateFontWeight(self, parsed, val);
         }
     }
@@ -1943,16 +1956,19 @@ pub const CSSGenerator = struct {
             std.mem.eql(u8, utility_name, "snap-y") or
             std.mem.eql(u8, utility_name, "snap-both") or
             std.mem.eql(u8, utility_name, "snap-mandatory") or
-            std.mem.eql(u8, utility_name, "snap-proximity")) {
+            std.mem.eql(u8, utility_name, "snap-proximity"))
+        {
             const snap_value = utility_name[5..]; // Skip "snap-"
             return self.generateScrollSnapType(parsed, snap_value);
         } else if (std.mem.eql(u8, utility_name, "snap-start") or
-                   std.mem.eql(u8, utility_name, "snap-end") or
-                   std.mem.eql(u8, utility_name, "snap-center")) {
+            std.mem.eql(u8, utility_name, "snap-end") or
+            std.mem.eql(u8, utility_name, "snap-center"))
+        {
             const align_value = utility_name[5..]; // Skip "snap-"
             return self.generateScrollSnapAlign(parsed, align_value);
         } else if (std.mem.eql(u8, utility_name, "snap-normal") or
-                   std.mem.eql(u8, utility_name, "snap-always")) {
+            std.mem.eql(u8, utility_name, "snap-always"))
+        {
             const stop_value = utility_name[5..]; // Skip "snap-"
             return self.generateScrollSnapStop(parsed, stop_value);
         }
@@ -2009,7 +2025,8 @@ pub const CSSGenerator = struct {
         // object-center, object-top, etc.
         if (parts.value) |val| {
             if (std.mem.eql(u8, val, "cover") or std.mem.eql(u8, val, "contain") or
-                std.mem.eql(u8, val, "fill") or std.mem.eql(u8, val, "none") or std.mem.eql(u8, val, "scale-down")) {
+                std.mem.eql(u8, val, "fill") or std.mem.eql(u8, val, "none") or std.mem.eql(u8, val, "scale-down"))
+            {
                 return layout.generateObjectFit(self, parsed, val);
             } else {
                 return layout.generateObjectPosition(self, parsed, val);

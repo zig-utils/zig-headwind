@@ -16,21 +16,21 @@ pub const OrderPriority = enum(u8) {
 pub fn getOrderPriority(rule: *const CSSRule) u8 {
     // Important rules go last
     if (rule.is_important) {
-        return @intFromEnum(OrderPriority.important);
+        return @backingInt(OrderPriority.important);
     }
 
     // Responsive rules go after variants
     if (rule.media != null) {
-        return @intFromEnum(OrderPriority.responsive);
+        return @backingInt(OrderPriority.responsive);
     }
 
     // Rules with pseudo-classes/elements are variants
     if (rule.pseudo != null) {
-        return @intFromEnum(OrderPriority.variants);
+        return @backingInt(OrderPriority.variants);
     }
 
     // Default to utilities
-    return @intFromEnum(OrderPriority.utilities);
+    return @backingInt(OrderPriority.utilities);
 }
 
 /// Get responsive breakpoint order

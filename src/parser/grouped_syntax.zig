@@ -1220,35 +1220,39 @@ pub const GroupedSyntaxParser = struct {
     /// Known responsive and state variant prefixes
     const variant_prefixes = [_][]const u8{
         // Responsive
-        "sm",              "md",              "lg",              "xl",              "2xl",
+        "sm",            "md",            "lg",            "xl",           "2xl",
         // State
-        "hover",           "focus",           "active",          "visited",         "disabled",
-        "enabled",         "checked",         "indeterminate",   "default",         "required",
-        "valid",           "invalid",         "in-range",        "out-of-range",    "placeholder-shown",
-        "autofill",        "read-only",
+        "hover",         "focus",         "active",        "visited",      "disabled",
+        "enabled",       "checked",       "indeterminate", "default",      "required",
+        "valid",         "invalid",       "in-range",      "out-of-range", "placeholder-shown",
+        "autofill",      "read-only",
         // First/last/odd/even
-        "first",           "last",            "odd",             "even",            "only",
-        "first-of-type",   "last-of-type",    "empty",
+            "first",         "last",         "odd",
+        "even",          "only",          "first-of-type", "last-of-type", "empty",
         // Focus
-        "focus-within",    "focus-visible",
+        "focus-within",  "focus-visible",
         // Dark mode
         "dark",
         // Print
-        "print",
+                 "print",
         // Motion
-        "motion-safe",     "motion-reduce",
+               "motion-safe",
+        "motion-reduce",
         // Contrast
-        "contrast-more",   "contrast-less",
+        "contrast-more", "contrast-less",
         // Content
-        "before",          "after",           "selection",       "marker",          "file",
+        "before",       "after",
+        "selection",     "marker",        "file",
         // RTL/LTR
-        "rtl",             "ltr",
+                 "rtl",          "ltr",
         // Orientation
-        "portrait",        "landscape",
+        "portrait",      "landscape",
         // Group/peer
-        "group-hover",     "group-focus",     "peer-hover",      "peer-focus",
+            "group-hover",   "group-focus",  "peer-hover",
+        "peer-focus",
         // Container queries
-        "@sm",             "@md",             "@lg",             "@xl",             "@2xl",
+           "@sm",           "@md",           "@lg",          "@xl",
+        "@2xl",
     };
 
     /// Check if a prefix is a known variant
@@ -1275,7 +1279,7 @@ pub const GroupedSyntaxParser = struct {
             if (isVariantPrefix(potential_variant) and simd.simdIndexOfScalar(rest, '[') != null) {
                 // Recursively expand the rest, then prepend variant to each result
                 if (try self.parseAndExpand(rest)) |expanded| {
-                    var results: std.ArrayList([]const u8) = .{};
+                    var results: std.ArrayList([]const u8) = .empty;
                     errdefer {
                         for (results.items) |item| self.allocator.free(item);
                         results.deinit(self.allocator);
@@ -1331,7 +1335,7 @@ pub const GroupedSyntaxParser = struct {
 
         if (content.len == 0) return null;
 
-        var results: std.ArrayList([]const u8) = .{};
+        var results: std.ArrayList([]const u8) = .empty;
         errdefer {
             for (results.items) |item| self.allocator.free(item);
             results.deinit(self.allocator);
@@ -2125,12 +2129,12 @@ pub const GroupedSyntaxParser = struct {
     fn isLikelyColor(value: []const u8) bool {
         // Common color names
         const color_names = [_][]const u8{
-            "white", "black", "transparent", "current", "inherit",
-            "slate", "gray", "zinc", "neutral", "stone",
-            "red", "orange", "amber", "yellow", "lime",
-            "green", "emerald", "teal", "cyan", "sky",
-            "blue", "indigo", "violet", "purple", "fuchsia",
-            "pink", "rose",
+            "white", "black",   "transparent", "current", "inherit",
+            "slate", "gray",    "zinc",        "neutral", "stone",
+            "red",   "orange",  "amber",       "yellow",  "lime",
+            "green", "emerald", "teal",        "cyan",    "sky",
+            "blue",  "indigo",  "violet",      "purple",  "fuchsia",
+            "pink",  "rose",
         };
 
         // Check if starts with a color name
@@ -2163,9 +2167,9 @@ pub const GroupedSyntaxParser = struct {
 
         // Check for common CSS units
         const units = [_][]const u8{
-            "px", "rem", "em", "vh", "vw", "vmin", "vmax",
-            "%", "ch", "ex", "cm", "mm", "in", "pt", "pc",
-            "svh", "svw", "lvh", "lvw", "dvh", "dvw",
+            "px", "rem", "em",  "vh",  "vw",  "vmin", "vmax",
+            "%",  "ch",  "ex",  "cm",  "mm",  "in",   "pt",
+            "pc", "svh", "svw", "lvh", "lvw", "dvh",  "dvw",
         };
 
         for (units) |unit| {
@@ -2186,7 +2190,7 @@ pub fn expandGroupedSyntax(allocator: std.mem.Allocator, class_str: []const u8) 
 
 /// Process a list of classes, expanding any grouped syntax patterns
 pub fn processClasses(allocator: std.mem.Allocator, classes: []const []const u8) ![][]const u8 {
-    var result: std.ArrayList([]const u8) = .{};
+    var result: std.ArrayList([]const u8) = .empty;
     errdefer {
         for (result.items) |item| allocator.free(item);
         result.deinit(allocator);

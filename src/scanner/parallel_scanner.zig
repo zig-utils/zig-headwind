@@ -38,7 +38,7 @@ pub const ParallelScanner = struct {
         for (results) |*result| {
             result.* = .{
                 .classes = &[_][]const u8{},
-                .mutex = .{},
+                .mutex = .init,
             };
         }
 
@@ -158,7 +158,7 @@ const WorkData = struct {
 /// Result container for each file
 const FileResult = struct {
     classes: [][]const u8,
-    mutex: std.Thread.Mutex,
+    mutex: std.Io.Mutex,
     ready: bool = false,
 };
 
